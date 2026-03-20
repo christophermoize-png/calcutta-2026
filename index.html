@@ -180,9 +180,41 @@ function decEsc(s){return s.replace(/&amp;/g,'&').replace(/&quot;/g,'"');}
 function startApp(){
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('warroom').classList.add('active');
+  try{localStorage.setItem('cwr_entered','1');}catch(e){}
   renderSummary();renderGames();initBracket();
   startScorePolling();
 }
+
+// Save/load game results to survive refresh
+function saveGameState(){
+  try{
+    var state=GAMES.map(function(g){return {result:g.result,score:g.score,payout:g.payout,time:g.time};});
+    localStorage.setItem('cwr_games',JSON.stringify(state));
+  }catch(e){}
+}
+function loadGameState(){
+  try{
+    var saved=localStorage.getItem('cwr_games');
+    if(!saved) return;
+    var state=JSON.parse(saved);
+    state.forEach(function(s,i){
+      if(i<GAMES.length && s.result){
+        GAMES[i].result=s.result;
+        GAMES[i].score=s.score;
+        GAMES[i].payout=s.payout;
+        GAMES[i].time=s.time||GAMES[i].time;
+      }
+    });
+  }catch(e){}
+}
+
+// Auto-enter if returning visitor
+loadGameState();
+try{
+  if(localStorage.getItem('cwr_entered')==='1'){
+    startApp();
+  }
+}catch(e){}
 
 var GAMES=[
   {day:'THU MAR 19',team:'Troy',seed:13,opp:'Nebraska',oseed:4,time:'FINAL',tv:'truTV',region:'South',mine:true,result:'L',score:'47-76',payout:0,espn:['Troy','Nebraska']},
@@ -203,6 +235,14 @@ var SCORE_API='https://site.api.espn.com/apis/site/v2/sports/basketball/mens-col
 var liveScoreActive=false;
 var scoreInterval=null;
 
+function getScoreURLs(){
+  // Fetch both tournament days to cover all our games
+  return [
+    SCORE_API+'?dates=20260319&groups=100&limit=50',
+    SCORE_API+'?dates=20260320&groups=100&limit=50'
+  ];
+}
+
 function nameMatch(espnName,ourNames){
   var n=espnName.toLowerCase();
   for(var i=0;i<ourNames.length;i++){
@@ -220,75 +260,77 @@ function nameMatch(espnName,ourNames){
 }
 
 function fetchScores(){
-  fetch(SCORE_API)
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(!liveScoreActive){
-        liveScoreActive=true;
-        renderGames(); // re-render to show "LIVE" badge
-      }
-      var events=data.events||[];
-      var changed=false;
-      events.forEach(function(ev){
-        var comps=ev.competitions&&ev.competitions[0];
-        if(!comps) return;
-        var teams=comps.competitors||[];
-        if(teams.length<2) return;
-        var home=teams.find(function(t){return t.homeAway==='home';});
-        var away=teams.find(function(t){return t.homeAway==='away';});
-        if(!home||!away) return;
-
-        var homeName=home.team.displayName||home.team.shortDisplayName||'';
-        var awayName=away.team.displayName||away.team.shortDisplayName||'';
-        var homeScore=parseInt(home.score)||0;
-        var awayScore=parseInt(away.score)||0;
-        var status=comps.status||{};
-        var state=status.type?status.type.name:'';
-        var clock=status.displayClock||'';
-        var period=status.period||0;
-
-        // Match to our games
-        GAMES.forEach(function(g,idx){
-          if(g.result==='W'||g.result==='L') return; // already final, skip
-          var ourTeamName=g.espn[0];
-          var oppTeamName=g.espn[1];
-          var ourIsHome=nameMatch(homeName,[ourTeamName]);
-          var ourIsAway=nameMatch(awayName,[ourTeamName]);
-          var oppIsHome=nameMatch(homeName,[oppTeamName]);
-          var oppIsAway=nameMatch(awayName,[oppTeamName]);
-
-          if((ourIsHome&&oppIsAway)||(ourIsAway&&oppIsHome)){
-            var ourScore=ourIsHome?homeScore:awayScore;
-            var oppScore=ourIsHome?awayScore:homeScore;
-
-            if(state==='STATUS_FINAL'){
-              g.result=ourScore>oppScore?'W':'L';
-              g.score=ourScore+'-'+oppScore;
-              g.payout=g.result==='W'?85.82:0;
-              g.time='FINAL';
-              g.live=null;
-              changed=true;
-            } else if(state==='STATUS_IN_PROGRESS'){
-              g.live={our:ourScore,opp:oppScore,clock:clock,period:period};
-              g.score=ourScore+'-'+oppScore;
-              changed=true;
-            } else if(state==='STATUS_HALFTIME'){
-              g.live={our:ourScore,opp:oppScore,clock:'HALF',period:2};
-              g.score=ourScore+'-'+oppScore;
-              changed=true;
-            }
-          }
-        });
-      });
-      if(changed){
-        renderGames();
-        renderSummary();
-      }
-    })
-    .catch(function(err){
-      console.log('Score fetch failed (CORS or network):',err.message);
-      // Manual buttons remain as fallback
+  var urls=getScoreURLs();
+  Promise.all(urls.map(function(u){
+    return fetch(u).then(function(r){return r.json();}).catch(function(){return {events:[]};});
+  })).then(function(results){
+    if(!liveScoreActive){
+      liveScoreActive=true;
+      renderGames();
+    }
+    var allEvents=[];
+    results.forEach(function(data){
+      if(data.events) allEvents=allEvents.concat(data.events);
     });
+    var changed=false;
+    allEvents.forEach(function(ev){
+      var comps=ev.competitions&&ev.competitions[0];
+      if(!comps) return;
+      var teams=comps.competitors||[];
+      if(teams.length<2) return;
+      var home=teams.find(function(t){return t.homeAway==='home';});
+      var away=teams.find(function(t){return t.homeAway==='away';});
+      if(!home||!away) return;
+
+      var homeName=home.team.displayName||home.team.shortDisplayName||home.team.name||'';
+      var awayName=away.team.displayName||away.team.shortDisplayName||away.team.name||'';
+      var homeScore=parseInt(home.score)||0;
+      var awayScore=parseInt(away.score)||0;
+      var status=comps.status||{};
+      var state=status.type?status.type.name:'';
+      var clock=status.displayClock||'';
+      var period=status.period||0;
+
+      GAMES.forEach(function(g,idx){
+        if(g.result==='W'||g.result==='L') return;
+        var ourTeamName=g.espn[0];
+        var oppTeamName=g.espn[1];
+        var ourIsHome=nameMatch(homeName,[ourTeamName]);
+        var ourIsAway=nameMatch(awayName,[ourTeamName]);
+        var oppIsHome=nameMatch(homeName,[oppTeamName]);
+        var oppIsAway=nameMatch(awayName,[oppTeamName]);
+
+        if((ourIsHome&&oppIsAway)||(ourIsAway&&oppIsHome)){
+          var ourScore=ourIsHome?homeScore:awayScore;
+          var oppScore=ourIsHome?awayScore:homeScore;
+
+          if(state==='STATUS_FINAL'){
+            g.result=ourScore>oppScore?'W':'L';
+            g.score=ourScore+'-'+oppScore;
+            g.payout=g.result==='W'?85.82:0;
+            g.time='FINAL';
+            g.live=null;
+            changed=true;
+            saveGameState();
+          } else if(state==='STATUS_IN_PROGRESS'){
+            g.live={our:ourScore,opp:oppScore,clock:clock,period:period};
+            g.score=ourScore+'-'+oppScore;
+            changed=true;
+          } else if(state==='STATUS_HALFTIME'){
+            g.live={our:ourScore,opp:oppScore,clock:'HALF',period:2};
+            g.score=ourScore+'-'+oppScore;
+            changed=true;
+          }
+        }
+      });
+    });
+    if(changed){
+      renderGames();
+      renderSummary();
+    }
+  }).catch(function(err){
+    console.log('Score fetch failed:',err.message);
+  });
 }
 
 function startScorePolling(){
@@ -306,7 +348,10 @@ function calcGamePnl(){
 function markResult(idx,result){
   GAMES[idx].result=result;
   GAMES[idx].payout=result==='W'?85.82:0;
+  GAMES[idx].time='FINAL';
+  saveGameState();
   renderGames();
+  renderSummary();
 }
 
 function renderGames(){
