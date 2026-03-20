@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 Calcutta War Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0f14;--bg2:#12161e;--bg3:#181d28;--card:#151a24;--card2:#1a2030;
+  --border:rgba(255,255,255,0.05);--border2:rgba(255,255,255,0.08);
+  --orange:#e8752a;--orange2:#f0883d;--orange-glow:rgba(232,117,42,0.12);
+  --green:#2ecc71;--green2:rgba(46,204,113,0.12);--green3:rgba(46,204,113,0.25);
+  --red:#e74c3c;--red2:rgba(231,76,60,0.12);
+  --text:#d4d8e0;--text2:#8892a4;--text3:#555d6e;--white:#f0f2f5;
+  --purple:#9b6dff;--blue:#4a9eff;
+  --font-display:'Oswald',sans-serif;--font-body:'Source Sans 3',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);padding:0;font-size:13px;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+#setup{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;
+  background:radial-gradient(ellipse at 50% 30%,rgba(232,117,42,0.06) 0%,transparent 60%)}
+#setup.hidden{display:none}
+.slogo{font-family:var(--font-display);font-size:36px;font-weight:700;color:var(--orange);letter-spacing:4px;text-transform:uppercase;margin-bottom:2px}
+.ssub{font-size:13px;color:var(--text2);margin-bottom:32px;letter-spacing:0.5px}
+.sbtn{background:var(--orange);color:#fff;font-family:var(--font-display);font-size:18px;font-weight:600;padding:16px 56px;border:none;border-radius:6px;cursor:pointer;text-transform:uppercase;letter-spacing:2px;transition:all 0.2s;box-shadow:0 4px 20px rgba(232,117,42,0.3)}
+.sbtn:hover{background:var(--orange2);transform:translateY(-1px);box-shadow:0 6px 28px rgba(232,117,42,0.4)}
+#warroom{display:none;padding:0;max-width:1200px;margin:0 auto}
+#warroom.active{display:block}
+.hdr{padding:16px 20px 12px;border-bottom:1px solid var(--border2);
+  background:linear-gradient(180deg,rgba(232,117,42,0.04) 0%,transparent 100%)}
+.hdr h1{font-family:var(--font-display);font-size:20px;font-weight:600;letter-spacing:3px;color:var(--orange);text-transform:uppercase}
+.hdr p{font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:0.3px}
+.ntabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 16px}
+.ntab{padding:12px 20px;font-family:var(--font-display);font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;text-transform:uppercase;letter-spacing:1.5px;transition:color 0.15s}
+.ntab.active{color:var(--orange);border-bottom-color:var(--orange)}
+.ntab:hover:not(.active){color:var(--text)}
+.page{display:none;padding:16px}.page.active{display:block}
+.dash{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.dash-card{background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:12px;text-align:center;position:relative;overflow:hidden}
+.dash-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--orange);opacity:0.4}
+.dash-val{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--white);line-height:1.1}
+.dash-dim{font-size:16px;color:var(--text3);font-weight:400}
+.dash-lbl{font-family:var(--font-display);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px}
+.dash-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.3}
+.dash-link{cursor:pointer;transition:border-color 0.15s,background 0.15s}
+.dash-link:hover{border-color:var(--orange);background:var(--orange-glow)}
+@media(max-width:700px){.dash{grid-template-columns:repeat(2,1fr)}}
+.gn{color:var(--green)}.rd{color:var(--red)}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:16px;margin:10px 0}
+.sc h3{font-family:var(--font-display);font-size:14px;color:var(--orange);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:10px 0}
+.ss{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+.ss .sv{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--orange)}
+.ss .sl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.sr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.sr:last-child{border:none}.sr .sn{color:var(--white);font-weight:700}.sr .sd2{color:var(--text3);font-size:10px}
+.sr .sp{color:var(--orange);font-weight:700}.sr .se{font-size:10px}
+.gc{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:6px}
+.gc h4{font-size:12px;color:var(--text);margin-bottom:4px}.gc.me{border-left:3px solid var(--green)}.gc.me h4{color:var(--green)}
+.bpnl{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;margin:10px 0;position:sticky;top:0;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.bpg{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:8px}
+.bpc{text-align:center;padding:6px 4px;border-radius:4px;background:var(--bg)}
+.bpc .bpr{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.bpc .bpa{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--orange)}
+.bpcx{background:var(--orange-glow);border:1px solid rgba(232,117,42,0.2)}
+.bpa.pos{color:var(--green)}.bpa.neg{color:var(--red)}
+.bpl{display:flex;justify-content:center;gap:16px;font-size:11px;color:var(--text2)}
+.brk-wrap{display:grid;grid-template-columns:1fr 40px 1fr;gap:0;overflow-x:auto;min-width:940px}
+.brk-half{display:flex;flex-direction:column;gap:0}
+.brk-center-strip{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:40px 0}
+.brk-center-line{flex:1;width:2px;border-left:2px dashed rgba(232,117,42,0.2)}
+.brk-center-label{font-family:var(--font-display);font-size:10px;color:var(--orange);letter-spacing:2px;text-align:center;padding:12px 0;opacity:0.6}
+.brk-rgn{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 8px;margin:4px}
+.brk-rgn-title{font-family:var(--font-display);font-size:20px;font-weight:700;text-align:center;padding:10px 0 6px;letter-spacing:3px;text-transform:uppercase}
+.brk-rgn-title.south{color:var(--orange)}.brk-rgn-title.east{color:var(--blue)}.brk-rgn-title.west{color:var(--green)}.brk-rgn-title.midwest{color:var(--purple)}
+.brk-hdrs{display:grid;gap:2px;font-family:var(--font-display);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;text-align:center;padding:0 2px 6px}
+.brk-hdrs.ltr{grid-template-columns:2fr 1.5fr 1fr 1fr}
+.brk-hdrs.rtl{grid-template-columns:1fr 1fr 1.5fr 2fr}
+.brk-cols{display:grid;gap:2px}
+.brk-cols.ltr{grid-template-columns:2fr 1.5fr 1fr 1fr}
+.brk-cols.rtl{grid-template-columns:1fr 1fr 1.5fr 2fr}
+.brk-col{display:flex;flex-direction:column;gap:1px}
+.brk-mu{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px;margin-bottom:2px}
+.brk-tm{display:flex;align-items:center;gap:4px;padding:5px 6px;border-radius:3px;cursor:pointer;transition:all 0.15s;position:relative;border:1px solid transparent}
+.brk-tm:hover{background:var(--orange-glow);border-color:rgba(232,117,42,0.15)}
+.brk-tm.pk{background:rgba(232,117,42,0.12);border:1px solid rgba(232,117,42,0.25)}
+.brk-tm.mine{background:var(--green2);border:1px solid var(--green3)}
+.brk-tm.mine.pk{background:rgba(46,204,113,0.18);border-color:rgba(46,204,113,0.4)}
+.brk-tm.empty{opacity:0.2;cursor:default}
+.brk-tm .tm-seed{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex-shrink:0;background:rgba(255,255,255,0.06);color:var(--text3)}
+.brk-tm.mine .tm-seed{background:rgba(46,204,113,0.2);color:var(--green)}
+.brk-tm .tm-info{flex:1;min-width:0;overflow:hidden}
+.brk-tm .tm-name{font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brk-tm.mine .tm-name{color:var(--green)}
+.brk-tm .tm-owner{font-size:7px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brk-tm.mine .tm-owner{color:rgba(46,204,113,0.5)}
+.brk-tm .tm-price{font-size:10px;font-weight:800;color:var(--orange);flex-shrink:0;margin-left:auto}
+.brk-tm.empty .tm-name{color:#2a2f3a;font-style:italic;font-weight:400}
+.brk-ff-center{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;padding:20px 0;gap:14px;
+  background:radial-gradient(ellipse at 50% 50%,rgba(232,117,42,0.03) 0%,transparent 70%)}
+.brk-ff-label{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--orange);letter-spacing:3px;text-transform:uppercase}
+.brk-ff-semis{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;width:100%;max-width:600px}
+.brk-ff-game{background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:12px}
+.brk-ff-game-label{font-family:var(--font-display);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;text-align:center}
+.brk-ff-vs{color:var(--text3);font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:2px}
+.brk-champ-box{background:var(--orange-glow);border:2px solid rgba(232,117,42,0.25);border-radius:8px;padding:14px;width:100%;max-width:280px}
+.brk-champ-label{font-family:var(--font-display);font-size:10px;color:var(--orange);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:6px;font-weight:600}
+.brk-champ-winner{text-align:center;font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--white);padding:8px 0;background:rgba(232,117,42,0.1);border-radius:6px;margin-top:6px;letter-spacing:2px}
+.brk-clear-row{text-align:right;padding:6px 8px}
+.ts-pnl{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;margin:0 0 6px}
+.ts-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ts-label{font-family:var(--font-display);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-right:4px;min-width:70px}
+.ts-chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.ts-chip.alive{background:var(--green2);color:var(--green);border:1px solid var(--green3)}
+.ts-chip.elim{background:var(--red2);color:var(--red);border:1px solid rgba(231,76,60,0.2);opacity:0.6;text-decoration:line-through}
+.ts-chip.pending{background:rgba(232,117,42,0.08);color:var(--orange);border:1px solid rgba(232,117,42,0.15)}
+.brk-clear-btn{background:var(--red2);color:var(--red);border:1px solid rgba(231,76,60,0.25);padding:6px 16px;border-radius:4px;font-family:var(--font-display);font-size:10px;font-weight:500;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
+.brk-clear-btn:hover{background:rgba(231,76,60,0.2)}
+.gm-day{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--orange);margin:14px 0 6px;padding-bottom:6px;border-bottom:1px solid rgba(232,117,42,0.15);letter-spacing:1px;text-transform:uppercase}
+.gm-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin:6px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;transition:border-color 0.15s}
+.gm-card.mine{border-color:var(--green3);background:var(--green2)}
+.gm-card.gm-won{border-color:rgba(46,204,113,0.5);background:rgba(46,204,113,0.08)}
+.gm-card.gm-lost{border-color:rgba(231,76,60,0.3);background:var(--red2);opacity:0.6}
+.gm-card.gm-live{border-color:rgba(46,204,113,0.5);animation:livepulse 2s ease-in-out infinite}
+@keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(46,204,113,0)}50%{box-shadow:0 0 12px 2px rgba(46,204,113,0.15)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.gm-live-badge{font-family:var(--font-display);font-size:9px;font-weight:600;color:#fff;background:var(--red);padding:1px 6px;border-radius:3px;display:inline-block;letter-spacing:1px;margin-bottom:2px;animation:pulse 1.2s infinite}
+.gm-left{flex:1}
+.gm-matchup{font-size:13px;font-weight:700;color:var(--white)}
+.gm-matchup .seed{color:var(--text3);font-size:11px;font-weight:600}
+.gm-meta{font-size:10px;color:var(--text3);margin-top:3px}
+.gm-right{text-align:right;min-width:70px}
+.gm-time{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--orange);letter-spacing:0.5px}
+.gm-tv{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+@media(max-width:950px){.brk-wrap{min-width:unset;grid-template-columns:1fr}.brk-center-strip{display:none}.brk-ff-semis{grid-template-columns:1fr}.bpg{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div id="setup">
+<div class="slogo">Calcutta War Room</div>
+<div class="ssub">2026 March Madness &bull; AUCTION COMPLETE &bull; Pot: $11,443</div>
+<button class="sbtn" onclick="startApp()">Enter War Room</button>
+</div>
+<div id="warroom">
+<div class="hdr"><h1>Calcutta War Room</h1><p>AUCTION COMPLETE &bull; Pot: $11,443 &bull; 68 teams sold</p></div>
+<div class="ntabs">
+<div class="ntab active" onclick="showPage('summary')">Summary</div>
+<div class="ntab" onclick="showPage('games')">Games</div>
+<div class="ntab" onclick="showPage('bracket')">Bracket</div>
+</div>
+<div id="pg-summary" class="page active"><div id="summaryContent"></div></div>
+<div id="pg-games" class="page"><div id="gamesContent"></div></div>
+<div id="pg-bracket" class="page"><div class="brk-clear-row"><button class="brk-clear-btn" onclick="clearBracket()">Clear Bracket</button></div><div id="teamStatusPnl"></div><div class="bpnl" id="brkPnl"></div><div id="bracketContent"></div></div>
+</div>
+<script>
+var data=[{"team": "Duke", "seed": 1, "region": "East", "p_r32": 97.0, "p_s16": 85.4, "p_e8": 73.4, "p_ff": 55.9, "p_cg": 37.0, "p_champ": 23.0, "ev": 628.5, "ev_pct": 9.67, "est_price": 825, "max_bid": 628, "value_score": -196.5, "rating": "DO NOT BUY", "cat_label": "Contender", "cat_key": "contender", "kp_off": 5, "kp_def": 1},{"team": "Michigan", "seed": 1, "region": "Midwest", "p_r32": 97.2, "p_s16": 83.4, "p_e8": 65.7, "p_ff": 49.9, "p_cg": 33.6, "p_champ": 20.1, "ev": 572.73, "ev_pct": 8.81, "est_price": 688, "max_bid": 573, "value_score": -115.27, "rating": "BUY NO MATTER WHAT", "cat_label": "Contender", "cat_key": "contender", "kp_off": 4, "kp_def": 2},{"team": "Arizona", "seed": 1, "region": "West", "p_r32": 96.9, "p_s16": 81.7, "p_e8": 63.3, "p_ff": 48.8, "p_cg": 29.1, "p_champ": 17.4, "ev": 532.98, "ev_pct": 8.2, "est_price": 605, "max_bid": 533, "value_score": -72.02, "rating": "BUY NO MATTER WHAT", "cat_label": "Contender", "cat_key": "contender", "kp_off": 7, "kp_def": 3},{"team": "Florida", "seed": 1, "region": "South", "p_r32": 96.3, "p_s16": 74.7, "p_e8": 60.8, "p_ff": 39.8, "p_cg": 22.3, "p_champ": 11.6, "ev": 443.8, "ev_pct": 6.83, "est_price": 632, "max_bid": 444, "value_score": -188.2, "rating": "AVOID", "cat_label": "Contender", "cat_key": "contender", "kp_off": 8, "kp_def": 4},{"team": "Houston", "seed": 2, "region": "South", "p_r32": 93.5, "p_s16": 69.0, "p_e8": 44.3, "p_ff": 24.0, "p_cg": 11.6, "p_champ": 5.5, "ev": 305.03, "ev_pct": 4.69, "est_price": 358, "max_bid": 305, "value_score": -52.97, "rating": "AVOID", "cat_label": "Contender", "cat_key": "contender", "kp_off": 15, "kp_def": 6},{"team": "Iowa State", "seed": 2, "region": "Midwest", "p_r32": 92.8, "p_s16": 60.7, "p_e8": 35.9, "p_ff": 14.5, "p_cg": 6.6, "p_champ": 2.6, "ev": 229.23, "ev_pct": 3.53, "est_price": 341, "max_bid": 229, "value_score": -111.77, "rating": "AVOID", "cat_label": "Contender", "cat_key": "contender", "kp_off": 22, "kp_def": 9},{"team": "Illinois", "seed": 3, "region": "South", "p_r32": 86.8, "p_s16": 62.0, "p_e8": 31.9, "p_ff": 15.4, "p_cg": 6.6, "p_champ": 2.5, "ev": 222.58, "ev_pct": 3.42, "est_price": 200, "max_bid": 223, "value_score": 22.58, "rating": "BUY NO MATTER WHAT", "cat_label": "Contender", "cat_key": "contender", "kp_off": 1, "kp_def": 26},{"team": "UConn", "seed": 2, "region": "East", "p_r32": 87.3, "p_s16": 58.0, "p_e8": 32.9, "p_ff": 12.7, "p_cg": 5.6, "p_champ": 2.2, "ev": 209.8, "ev_pct": 3.23, "est_price": 422, "max_bid": 210, "value_score": -212.2, "rating": "AVOID", "cat_label": "Contender", "cat_key": "contender", "kp_off": 28, "kp_def": 11},{"team": "Gonzaga", "seed": 3, "region": "West", "p_r32": 87.6, "p_s16": 56.2, "p_e8": 32.6, "p_ff": 12.5, "p_cg": 4.8, "p_champ": 1.7, "ev": 201.61, "ev_pct": 3.1, "est_price": 209, "max_bid": 202, "value_score": -7.39, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Contender", "cat_key": "contender", "kp_off": 12, "kp_def": 20},{"team": "Purdue", "seed": 2, "region": "West", "p_r32": 87.5, "p_s16": 53.6, "p_e8": 29.1, "p_ff": 10.5, "p_cg": 3.7, "p_champ": 1.3, "ev": 182.83, "ev_pct": 2.81, "est_price": 358, "max_bid": 183, "value_score": -175.17, "rating": "AVOID", "cat_label": "Contender", "cat_key": "contender", "kp_off": 2, "kp_def": 39},{"team": "Michigan State", "seed": 3, "region": "East", "p_r32": 86.4, "p_s16": 47.6, "p_e8": 25.1, "p_ff": 8.9, "p_cg": 3.5, "p_champ": 1.3, "ev": 166.5, "ev_pct": 2.56, "est_price": 218, "max_bid": 166, "value_score": -51.5, "rating": "AVOID", "cat_label": "Contender", "cat_key": "contender", "kp_off": 20, "kp_def": 15},{"team": "Virginia", "seed": 3, "region": "Midwest", "p_r32": 86.3, "p_s16": 47.6, "p_e8": 23.4, "p_ff": 7.9, "p_cg": 3.2, "p_champ": 1.1, "ev": 159.14, "ev_pct": 2.45, "est_price": 190, "max_bid": 159, "value_score": -30.86, "rating": "DO NOT BUY", "cat_label": "Overpriced", "cat_key": "trap", "kp_off": 30, "kp_def": 12},{"team": "Louisville", "seed": 6, "region": "East", "p_r32": 74.2, "p_s16": 41.7, "p_e8": 22.6, "p_ff": 8.1, "p_cg": 3.4, "p_champ": 1.3, "ev": 148.99, "ev_pct": 2.29, "est_price": 74, "max_bid": 149, "value_score": 74.99, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Contender", "cat_key": "contender", "kp_off": 19, "kp_def": 26},{"team": "Tennessee", "seed": 6, "region": "Midwest", "p_r32": 72.3, "p_s16": 40.5, "p_e8": 20.6, "p_ff": 7.2, "p_cg": 3.0, "p_champ": 1.0, "ev": 138.82, "ev_pct": 2.14, "est_price": 74, "max_bid": 139, "value_score": 64.82, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 35, "kp_def": 18},{"team": "Arkansas", "seed": 4, "region": "West", "p_r32": 84.1, "p_s16": 45.8, "p_e8": 14.1, "p_ff": 7.3, "p_cg": 2.5, "p_champ": 0.8, "ev": 135.87, "ev_pct": 2.09, "est_price": 161, "max_bid": 136, "value_score": -25.13, "rating": "DO NOT BUY", "cat_label": "Hold", "cat_key": "hold", "kp_off": 5, "kp_def": 46},{"team": "Wisconsin", "seed": 5, "region": "West", "p_r32": 75.6, "p_s16": 43.2, "p_e8": 13.8, "p_ff": 7.4, "p_cg": 2.7, "p_champ": 0.9, "ev": 130.45, "ev_pct": 2.01, "est_price": 90, "max_bid": 130, "value_score": 40.45, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 11, "kp_def": 51},{"team": "Texas Tech", "seed": 5, "region": "Midwest", "p_r32": 70.8, "p_s16": 41.9, "p_e8": 13.0, "p_ff": 6.6, "p_cg": 2.7, "p_champ": 0.9, "ev": 124.09, "ev_pct": 1.91, "est_price": 90, "max_bid": 124, "value_score": 34.09, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 16, "kp_def": 25},{"team": "Alabama", "seed": 4, "region": "Midwest", "p_r32": 80.8, "p_s16": 42.5, "p_e8": 12.4, "p_ff": 5.7, "p_cg": 2.2, "p_champ": 0.7, "ev": 123.6, "ev_pct": 1.9, "est_price": 168, "max_bid": 124, "value_score": -44.4, "rating": "DO NOT BUY", "cat_label": "Overpriced", "cat_key": "trap", "kp_off": 10, "kp_def": 30},{"team": "Kansas", "seed": 4, "region": "East", "p_r32": 81.0, "p_s16": 45.5, "p_e8": 9.9, "p_ff": 3.9, "p_cg": 1.2, "p_champ": 0.3, "ev": 113.31, "ev_pct": 1.74, "est_price": 196, "max_bid": 113, "value_score": -82.69, "rating": "AVOID", "cat_label": "Overpriced", "cat_key": "trap", "kp_off": 50, "kp_def": 30},{"team": "Vanderbilt", "seed": 5, "region": "South", "p_r32": 71.9, "p_s16": 41.5, "p_e8": 11.9, "p_ff": 4.2, "p_cg": 1.2, "p_champ": 0.3, "ev": 108.79, "ev_pct": 1.67, "est_price": 90, "max_bid": 109, "value_score": 18.79, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Value", "cat_key": "value", "kp_off": 22, "kp_def": 75},{"team": "St. John's", "seed": 5, "region": "East", "p_r32": 72.8, "p_s16": 40.6, "p_e8": 8.6, "p_ff": 3.3, "p_cg": 1.0, "p_champ": 0.3, "ev": 100.37, "ev_pct": 1.54, "est_price": 94, "max_bid": 100, "value_score": 6.37, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Dark horse", "cat_key": "dark", "kp_off": 38, "kp_def": 45},{"team": "UCLA", "seed": 7, "region": "East", "p_r32": 63.0, "p_s16": 27.2, "p_e8": 12.1, "p_ff": 3.5, "p_cg": 1.1, "p_champ": 0.4, "ev": 89.8, "ev_pct": 1.38, "est_price": 72, "max_bid": 90, "value_score": 17.8, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Value", "cat_key": "value", "kp_off": 35, "kp_def": 40},{"team": "Miami (FL)", "seed": 7, "region": "West", "p_r32": 57.4, "p_s16": 27.1, "p_e8": 12.7, "p_ff": 3.8, "p_cg": 1.1, "p_champ": 0.3, "ev": 88.2, "ev_pct": 1.36, "est_price": 60, "max_bid": 88, "value_score": 28.2, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 25, "kp_def": 40},{"team": "Nebraska", "seed": 4, "region": "South", "p_r32": 61.7, "p_s16": 32.8, "p_e8": 8.5, "p_ff": 2.8, "p_cg": 0.8, "p_champ": 0.2, "ev": 84.82, "ev_pct": 1.3, "est_price": 140, "max_bid": 85, "value_score": -55.18, "rating": "AVOID", "cat_label": "Overpriced", "cat_key": "trap", "kp_off": 70, "kp_def": 8},{"team": "BYU", "seed": 6, "region": "West", "p_r32": 56.1, "p_s16": 24.4, "p_e8": 11.3, "p_ff": 3.2, "p_cg": 0.9, "p_champ": 0.3, "ev": 80.38, "ev_pct": 1.24, "est_price": 70, "max_bid": 80, "value_score": 10.38, "rating": "DO NOT BUY", "cat_label": "Dark horse", "cat_key": "dark", "kp_off": 18, "kp_def": 35},{"team": "Iowa", "seed": 9, "region": "South", "p_r32": 61.0, "p_s16": 16.9, "p_e8": 10.3, "p_ff": 4.1, "p_cg": 1.4, "p_champ": 0.4, "ev": 78.16, "ev_pct": 1.2, "est_price": 35, "max_bid": 78, "value_score": 43.16, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 25, "kp_def": 35},{"team": "Santa Clara", "seed": 10, "region": "Midwest", "p_r32": 52.9, "p_s16": 21.0, "p_e8": 9.4, "p_ff": 2.7, "p_cg": 1.0, "p_champ": 0.3, "ev": 71.85, "ev_pct": 1.11, "est_price": 28, "max_bid": 72, "value_score": 43.85, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Value", "cat_key": "value", "kp_off": 45, "kp_def": 35},{"team": "North Carolina", "seed": 6, "region": "South", "p_r32": 54.6, "p_s16": 19.6, "p_e8": 6.5, "p_ff": 2.0, "p_cg": 0.5, "p_champ": 0.1, "ev": 62.82, "ev_pct": 0.97, "est_price": 94, "max_bid": 63, "value_score": -31.18, "rating": "AVOID", "cat_label": "Dark horse", "cat_key": "dark", "kp_off": 32, "kp_def": 38},{"team": "Saint Mary's", "seed": 7, "region": "South", "p_r32": 54.2, "p_s16": 16.8, "p_e8": 7.2, "p_ff": 2.4, "p_cg": 0.7, "p_champ": 0.2, "ev": 62.64, "ev_pct": 0.96, "est_price": 60, "max_bid": 63, "value_score": 2.64, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Dark horse", "cat_key": "dark", "kp_off": 30, "kp_def": 42},{"team": "Kentucky", "seed": 7, "region": "Midwest", "p_r32": 47.1, "p_s16": 17.4, "p_e8": 7.3, "p_ff": 2.0, "p_cg": 0.6, "p_champ": 0.2, "ev": 58.78, "ev_pct": 0.9, "est_price": 84, "max_bid": 59, "value_score": -25.22, "rating": "DO NOT BUY", "cat_label": "Dark horse", "cat_key": "dark", "kp_off": 40, "kp_def": 28},{"team": "Texas/NC State", "seed": 11, "region": "West", "p_r32": 43.9, "p_s16": 16.8, "p_e8": 6.9, "p_ff": 1.7, "p_cg": 0.4, "p_champ": 0.1, "ev": 54.26, "ev_pct": 0.83, "est_price": 22, "max_bid": 54, "value_score": 32.26, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 40, "kp_def": 55},{"team": "Missouri", "seed": 10, "region": "West", "p_r32": 42.6, "p_s16": 17.1, "p_e8": 6.7, "p_ff": 1.6, "p_cg": 0.4, "p_champ": 0.1, "ev": 53.51, "ev_pct": 0.82, "est_price": 28, "max_bid": 54, "value_score": 25.51, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 42, "kp_def": 52},{"team": "Texas A&M", "seed": 10, "region": "South", "p_r32": 45.8, "p_s16": 13.1, "p_e8": 5.1, "p_ff": 1.6, "p_cg": 0.4, "p_champ": 0.1, "ev": 48.57, "ev_pct": 0.75, "est_price": 28, "max_bid": 49, "value_score": 20.57, "rating": "BUY NO MATTER WHAT", "cat_label": "Value", "cat_key": "value", "kp_off": 48, "kp_def": 55},{"team": "Utah State", "seed": 9, "region": "West", "p_r32": 53.0, "p_s16": 9.9, "p_e8": 4.1, "p_ff": 1.6, "p_cg": 0.4, "p_champ": 0.1, "ev": 47.48, "ev_pct": 0.73, "est_price": 35, "max_bid": 47, "value_score": 12.48, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Dark horse", "cat_key": "dark", "kp_off": 35, "kp_def": 50},{"team": "VCU", "seed": 11, "region": "South", "p_r32": 45.4, "p_s16": 14.8, "p_e8": 4.4, "p_ff": 1.2, "p_cg": 0.2, "p_champ": 0.1, "ev": 47.22, "ev_pct": 0.73, "est_price": 22, "max_bid": 47, "value_score": 25.22, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Value", "cat_key": "value", "kp_off": 85, "kp_def": 60},{"team": "St. Louis", "seed": 9, "region": "Midwest", "p_r32": 52.4, "p_s16": 8.8, "p_e8": 3.6, "p_ff": 1.3, "p_cg": 0.4, "p_champ": 0.1, "ev": 44.41, "ev_pct": 0.68, "est_price": 35, "max_bid": 44, "value_score": 9.41, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Filler", "cat_key": "filler", "kp_off": 30, "kp_def": 55},{"team": "Troy", "seed": 13, "region": "South", "p_r32": 38.3, "p_s16": 15.9, "p_e8": 3.1, "p_ff": 0.7, "p_cg": 0.1, "p_champ": 0.0, "ev": 41.25, "ev_pct": 0.63, "est_price": 10, "max_bid": 41, "value_score": 31.25, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Value", "cat_key": "value", "kp_off": 150, "kp_def": 140},{"team": "Ohio State", "seed": 8, "region": "East", "p_r32": 51.2, "p_s16": 7.3, "p_e8": 3.5, "p_ff": 1.1, "p_cg": 0.3, "p_champ": 0.1, "ev": 41.22, "ev_pct": 0.63, "est_price": 45, "max_bid": 41, "value_score": -3.78, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Filler", "cat_key": "filler", "kp_off": 40, "kp_def": 70},{"team": "Villanova", "seed": 8, "region": "West", "p_r32": 47.0, "p_s16": 7.9, "p_e8": 3.0, "p_ff": 1.1, "p_cg": 0.3, "p_champ": 0.1, "ev": 38.95, "ev_pct": 0.6, "est_price": 50, "max_bid": 39, "value_score": -11.05, "rating": "DO NOT BUY", "cat_label": "Filler", "cat_key": "filler", "kp_off": 55, "kp_def": 48},{"team": "TCU", "seed": 9, "region": "East", "p_r32": 48.8, "p_s16": 6.7, "p_e8": 3.2, "p_ff": 1.0, "p_cg": 0.2, "p_champ": 0.0, "ev": 38.4, "ev_pct": 0.59, "est_price": 35, "max_bid": 38, "value_score": 3.4, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Filler", "cat_key": "filler", "kp_off": 60, "kp_def": 55},{"team": "UCF", "seed": 10, "region": "East", "p_r32": 37.0, "p_s16": 11.9, "p_e8": 3.8, "p_ff": 0.8, "p_cg": 0.2, "p_champ": 0.0, "ev": 38.03, "ev_pct": 0.59, "est_price": 28, "max_bid": 38, "value_score": 10.03, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Filler", "cat_key": "filler", "kp_off": 55, "kp_def": 65},{"team": "Georgia", "seed": 8, "region": "Midwest", "p_r32": 47.6, "p_s16": 7.4, "p_e8": 2.8, "p_ff": 0.9, "p_cg": 0.2, "p_champ": 0.0, "ev": 37.74, "ev_pct": 0.58, "est_price": 45, "max_bid": 38, "value_score": -7.26, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Filler", "cat_key": "filler", "kp_off": 50, "kp_def": 45},{"team": "Clemson", "seed": 8, "region": "South", "p_r32": 39.0, "p_s16": 8.0, "p_e8": 4.0, "p_ff": 1.3, "p_cg": 0.3, "p_champ": 0.1, "ev": 37.33, "ev_pct": 0.57, "est_price": 45, "max_bid": 37, "value_score": -7.67, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Dark horse", "cat_key": "dark", "kp_off": 45, "kp_def": 50},{"team": "Akron", "seed": 12, "region": "Midwest", "p_r32": 29.2, "p_s16": 11.4, "p_e8": 2.1, "p_ff": 0.6, "p_cg": 0.1, "p_champ": 0.0, "ev": 30.48, "ev_pct": 0.47, "est_price": 17, "max_bid": 30, "value_score": 13.48, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 75, "kp_def": 65},{"team": "SMU/Miami (OH)", "seed": 11, "region": "Midwest", "p_r32": 27.7, "p_s16": 9.6, "p_e8": 2.9, "p_ff": 0.6, "p_cg": 0.1, "p_champ": 0.0, "ev": 29.29, "ev_pct": 0.45, "est_price": 22, "max_bid": 29, "value_score": 7.29, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Filler", "cat_key": "filler", "kp_off": 60, "kp_def": 70},{"team": "South Florida", "seed": 11, "region": "East", "p_r32": 25.8, "p_s16": 8.4, "p_e8": 2.6, "p_ff": 0.5, "p_cg": 0.1, "p_champ": 0.0, "ev": 26.5, "ev_pct": 0.41, "est_price": 22, "max_bid": 27, "value_score": 4.5, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Filler", "cat_key": "filler", "kp_off": 90, "kp_def": 80},{"team": "McNeese", "seed": 12, "region": "South", "p_r32": 28.1, "p_s16": 9.7, "p_e8": 1.4, "p_ff": 0.2, "p_cg": 0.0, "p_champ": 0.0, "ev": 26.0, "ev_pct": 0.4, "est_price": 17, "max_bid": 26, "value_score": 9.0, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 100, "kp_def": 110},{"team": "Northern Iowa", "seed": 12, "region": "East", "p_r32": 27.2, "p_s16": 9.1, "p_e8": 1.0, "p_ff": 0.2, "p_cg": 0.0, "p_champ": 0.0, "ev": 24.17, "ev_pct": 0.37, "est_price": 17, "max_bid": 24, "value_score": 7.17, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 120, "kp_def": 130},{"team": "High Point", "seed": 12, "region": "West", "p_r32": 24.4, "p_s16": 7.9, "p_e8": 1.2, "p_ff": 0.4, "p_cg": 0.1, "p_champ": 0.0, "ev": 22.57, "ev_pct": 0.35, "est_price": 17, "max_bid": 23, "value_score": 5.57, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 80, "kp_def": 90},{"team": "Cal Baptist", "seed": 13, "region": "East", "p_r32": 19.0, "p_s16": 4.9, "p_e8": 0.3, "p_ff": 0.1, "p_cg": 0.0, "p_champ": 0.0, "ev": 14.7, "ev_pct": 0.23, "est_price": 10, "max_bid": 15, "value_score": 4.7, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 200, "kp_def": 190},{"team": "Hofstra", "seed": 13, "region": "Midwest", "p_r32": 19.2, "p_s16": 4.2, "p_e8": 0.4, "p_ff": 0.1, "p_cg": 0.0, "p_champ": 0.0, "ev": 14.24, "ev_pct": 0.22, "est_price": 10, "max_bid": 14, "value_score": 4.24, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 130, "kp_def": 120},{"team": "Hawaii", "seed": 13, "region": "West", "p_r32": 15.9, "p_s16": 3.1, "p_e8": 0.3, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 11.32, "ev_pct": 0.17, "est_price": 10, "max_bid": 11, "value_score": 1.32, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 170, "kp_def": 160},{"team": "Penn", "seed": 14, "region": "South", "p_r32": 13.2, "p_s16": 3.7, "p_e8": 0.5, "p_ff": 0.1, "p_cg": 0.0, "p_champ": 0.0, "ev": 11.07, "ev_pct": 0.17, "est_price": 6, "max_bid": 11, "value_score": 5.07, "rating": "BUY FOR RIGHT PRICE", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 140, "kp_def": 130},{"team": "Furman", "seed": 15, "region": "East", "p_r32": 12.7, "p_s16": 2.9, "p_e8": 0.5, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 9.94, "ev_pct": 0.15, "est_price": 5, "max_bid": 10, "value_score": 4.94, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 160, "kp_def": 150},{"team": "Wright State", "seed": 14, "region": "Midwest", "p_r32": 13.7, "p_s16": 2.3, "p_e8": 0.4, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 9.69, "ev_pct": 0.15, "est_price": 6, "max_bid": 10, "value_score": 3.69, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 180, "kp_def": 175},{"team": "North Dakota St", "seed": 14, "region": "East", "p_r32": 13.6, "p_s16": 2.3, "p_e8": 0.4, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 9.57, "ev_pct": 0.15, "est_price": 6, "max_bid": 10, "value_score": 3.57, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 180, "kp_def": 170},{"team": "Kennesaw State", "seed": 14, "region": "West", "p_r32": 12.4, "p_s16": 2.5, "p_e8": 0.4, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 9.31, "ev_pct": 0.14, "est_price": 6, "max_bid": 9, "value_score": 3.31, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 190, "kp_def": 180},{"team": "Queens", "seed": 15, "region": "West", "p_r32": 12.5, "p_s16": 2.2, "p_e8": 0.3, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 8.82, "ev_pct": 0.14, "est_price": 5, "max_bid": 9, "value_score": 3.82, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 200, "kp_def": 200},{"team": "Tennessee State", "seed": 15, "region": "Midwest", "p_r32": 7.2, "p_s16": 0.9, "p_e8": 0.1, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 4.61, "ev_pct": 0.07, "est_price": 5, "max_bid": 5, "value_score": -0.39, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 280, "kp_def": 270},{"team": "Idaho", "seed": 15, "region": "South", "p_r32": 6.5, "p_s16": 1.1, "p_e8": 0.1, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 4.51, "ev_pct": 0.07, "est_price": 5, "max_bid": 5, "value_score": -0.49, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 250, "kp_def": 240},{"team": "Prairie View/Lehigh", "seed": 16, "region": "South", "p_r32": 3.7, "p_s16": 0.4, "p_e8": 0.0, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 2.31, "ev_pct": 0.04, "est_price": 5, "max_bid": 2, "value_score": -2.69, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 320, "kp_def": 310},{"team": "Siena", "seed": 16, "region": "East", "p_r32": 3.0, "p_s16": 0.6, "p_e8": 0.1, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 2.16, "ev_pct": 0.03, "est_price": 5, "max_bid": 2, "value_score": -2.84, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 300, "kp_def": 280},{"team": "LIU", "seed": 16, "region": "West", "p_r32": 3.1, "p_s16": 0.4, "p_e8": 0.1, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 2.02, "ev_pct": 0.03, "est_price": 5, "max_bid": 2, "value_score": -2.98, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 330, "kp_def": 320},{"team": "UMBC/Howard", "seed": 16, "region": "Midwest", "p_r32": 2.8, "p_s16": 0.4, "p_e8": 0.0, "p_ff": 0.0, "p_cg": 0.0, "p_champ": 0.0, "ev": 1.86, "ev_pct": 0.03, "est_price": 5, "max_bid": 2, "value_score": -3.14, "rating": "BUY IF NO ONE ELSE WILL", "cat_label": "Lottery ticket", "cat_key": "lottery", "kp_off": 310, "kp_def": 300}];
+
+var BRACKET={"East": [[["Duke", 1], ["Siena", 16]], [["Ohio State", 8], ["TCU", 9]], [["St. John's", 5], ["Northern Iowa", 12]], [["Kansas", 4], ["Cal Baptist", 13]], [["Louisville", 6], ["South Florida", 11]], [["Michigan State", 3], ["North Dakota St", 14]], [["UCLA", 7], ["UCF", 10]], [["UConn", 2], ["Furman", 15]]], "South": [[["Florida", 1], ["Prairie View/Lehigh", 16]], [["Clemson", 8], ["Iowa", 9]], [["Vanderbilt", 5], ["McNeese", 12]], [["Nebraska", 4], ["Troy", 13]], [["North Carolina", 6], ["VCU", 11]], [["Illinois", 3], ["Penn", 14]], [["Saint Mary's", 7], ["Texas A&M", 10]], [["Houston", 2], ["Idaho", 15]]], "West": [[["Arizona", 1], ["LIU", 16]], [["Villanova", 8], ["Utah State", 9]], [["Wisconsin", 5], ["High Point", 12]], [["Arkansas", 4], ["Hawaii", 13]], [["BYU", 6], ["Texas/NC State", 11]], [["Gonzaga", 3], ["Kennesaw State", 14]], [["Miami (FL)", 7], ["Missouri", 10]], [["Purdue", 2], ["Queens", 15]]], "Midwest": [[["Michigan", 1], ["UMBC/Howard", 16]], [["Georgia", 8], ["St. Louis", 9]], [["Texas Tech", 5], ["Akron", 12]], [["Alabama", 4], ["Hofstra", 13]], [["Tennessee", 6], ["SMU/Miami (OH)", 11]], [["Virginia", 3], ["Wright State", 14]], [["Kentucky", 7], ["Santa Clara", 10]], [["Iowa State", 2], ["Tennessee State", 15]]]};
+var AUCTION=[{"region": "South", "seed": 1, "team": "Florida", "owner": "Casey", "price": 1050}, {"region": "South", "seed": 2, "team": "Houston", "owner": "Brandon", "price": 850}, {"region": "South", "seed": 3, "team": "Illinois", "owner": "Sam", "price": 375}, {"region": "South", "seed": 4, "team": "Nebraska", "owner": "Casey", "price": 150}, {"region": "South", "seed": 5, "team": "Vanderbilt", "owner": "Chris", "price": 200}, {"region": "South", "seed": 6, "team": "North Carolina", "owner": "Sam", "price": 80}, {"region": "South", "seed": 7, "team": "Saint Mary's", "owner": "Matt", "price": 60}, {"region": "South", "seed": 8, "team": "Clemson", "owner": "Matt", "price": 60}, {"region": "South", "seed": 9, "team": "Iowa", "owner": "Brandon", "price": 60}, {"region": "South", "seed": 10, "team": "Texas A&M", "owner": "Chris", "price": 60}, {"region": "South", "seed": 11, "team": "VCU", "owner": "Matt", "price": 60}, {"region": "South", "seed": 12, "team": "McNeese", "owner": "Sam", "price": 15}, {"region": "South", "seed": 13, "team": "Troy", "owner": "Chris", "price": 35}, {"region": "South", "seed": 14, "team": "Penn", "owner": "Brandon", "price": 10}, {"region": "South", "seed": 15, "team": "Idaho", "owner": "Matt", "price": 5}, {"region": "South", "seed": 16, "team": "Prairie View/Lehigh", "owner": "Casey", "price": 3}, {"region": "East", "seed": 1, "team": "Duke", "owner": "Stewart", "price": 1100}, {"region": "East", "seed": 2, "team": "UConn", "owner": "Brandon", "price": 400}, {"region": "East", "seed": 3, "team": "Michigan State", "owner": "Matt", "price": 275}, {"region": "East", "seed": 4, "team": "Kansas", "owner": "Brandon", "price": 150}, {"region": "East", "seed": 5, "team": "St. John's", "owner": "Chris", "price": 300}, {"region": "East", "seed": 6, "team": "Louisville", "owner": "Chris", "price": 120}, {"region": "East", "seed": 7, "team": "UCLA", "owner": "Sam", "price": 120}, {"region": "East", "seed": 8, "team": "Ohio State", "owner": "Matt", "price": 80}, {"region": "East", "seed": 9, "team": "TCU", "owner": "Stewart", "price": 80}, {"region": "East", "seed": 10, "team": "UCF", "owner": "Stewart", "price": 60}, {"region": "East", "seed": 11, "team": "South Florida", "owner": "Sam", "price": 75}, {"region": "East", "seed": 12, "team": "Northern Iowa", "owner": "Casey", "price": 30}, {"region": "East", "seed": 13, "team": "Cal Baptist", "owner": "Sam", "price": 5}, {"region": "East", "seed": 14, "team": "North Dakota St", "owner": "Matt", "price": 5}, {"region": "East", "seed": 15, "team": "Furman", "owner": "Stewart", "price": 5}, {"region": "East", "seed": 16, "team": "Siena", "owner": "Matt", "price": 1}, {"region": "West", "seed": 1, "team": "Arizona", "owner": "Chris", "price": 1000}, {"region": "West", "seed": 2, "team": "Purdue", "owner": "Stewart", "price": 500}, {"region": "West", "seed": 3, "team": "Gonzaga", "owner": "Casey", "price": 350}, {"region": "West", "seed": 4, "team": "Arkansas", "owner": "Brandon", "price": 450}, {"region": "West", "seed": 5, "team": "Wisconsin", "owner": "Matt", "price": 160}, {"region": "West", "seed": 6, "team": "BYU", "owner": "Chris", "price": 100}, {"region": "West", "seed": 7, "team": "Miami (FL)", "owner": "Chris", "price": 100}, {"region": "West", "seed": 8, "team": "Villanova", "owner": "Sam", "price": 20}, {"region": "West", "seed": 9, "team": "Utah State", "owner": "Matt", "price": 80}, {"region": "West", "seed": 10, "team": "Missouri", "owner": "Casey", "price": 75}, {"region": "West", "seed": 11, "team": "Texas/NC State", "owner": "Sam", "price": 75}, {"region": "West", "seed": 12, "team": "High Point", "owner": "Chris", "price": 30}, {"region": "West", "seed": 13, "team": "Hawaii", "owner": "Sam", "price": 5}, {"region": "West", "seed": 14, "team": "Kennesaw State", "owner": "Sam", "price": 5}, {"region": "West", "seed": 15, "team": "Queens", "owner": "Matt", "price": 5}, {"region": "West", "seed": 16, "team": "LIU", "owner": "Sam", "price": 5}, {"region": "Midwest", "seed": 1, "team": "Michigan", "owner": "Sam", "price": 750}, {"region": "Midwest", "seed": 2, "team": "Iowa State", "owner": "Matt", "price": 700}, {"region": "Midwest", "seed": 3, "team": "Virginia", "owner": "Casey", "price": 225}, {"region": "Midwest", "seed": 4, "team": "Alabama", "owner": "Casey", "price": 200}, {"region": "Midwest", "seed": 5, "team": "Texas Tech", "owner": "Matt", "price": 180}, {"region": "Midwest", "seed": 6, "team": "Tennessee", "owner": "Stewart", "price": 200}, {"region": "Midwest", "seed": 7, "team": "Kentucky", "owner": "Brandon", "price": 40}, {"region": "Midwest", "seed": 8, "team": "Georgia", "owner": "Stewart", "price": 40}, {"region": "Midwest", "seed": 9, "team": "St. Louis", "owner": "Matt", "price": 60}, {"region": "Midwest", "seed": 10, "team": "Santa Clara", "owner": "Matt", "price": 60}, {"region": "Midwest", "seed": 11, "team": "SMU/Miami (OH)", "owner": "Matt", "price": 45}, {"region": "Midwest", "seed": 12, "team": "Akron", "owner": "Chris", "price": 60}, {"region": "Midwest", "seed": 13, "team": "Hofstra", "owner": "Sam", "price": 20}, {"region": "Midwest", "seed": 14, "team": "Wright State", "owner": "Casey", "price": 10}, {"region": "Midwest", "seed": 15, "team": "Tennessee State", "owner": "Sam", "price": 10}, {"region": "Midwest", "seed": 16, "team": "UMBC/Howard", "owner": "Chris", "price": 4}];
+var CHRIS_TEAMS=["Arizona", "St. John's", "Vanderbilt", "Louisville", "BYU", "Miami (FL)", "Texas A&M", "Akron", "Troy", "High Point", "UMBC/Howard"];
+var BASE_POT=6500;
+var FINAL_POT=11443;
+var CHRIS_SPENT=2009;
+var SCALE=FINAL_POT/BASE_POT;
+var PAYOUTS={r64:FINAL_POT*0.0075,r32:FINAL_POT*0.015,s16:FINAL_POT*0.025,e8:FINAL_POT*0.03,ff:FINAL_POT*0.05,champ:FINAL_POT*0.10};
+var PAYOUT_LABELS=[{key:'r64',label:'R64',pct:'0.75%'},{key:'r32',label:'R32',pct:'1.5%'},{key:'s16',label:'S16',pct:'2.5%'},{key:'e8',label:'E8',pct:'3.0%'},{key:'ff',label:'FF',pct:'5.0%'},{key:'champ',label:'Champ',pct:'10.0%'}];
+
+var dataLookup={};
+data.forEach(function(d){dataLookup[d.team]=d;});
+var brkState={};
+var brkWinnings=0;
+
+function isMine(t){return CHRIS_TEAMS.indexOf(t)>=0;}
+function liveEV(t){return t.ev*SCALE;}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function decEsc(s){return s.replace(/&amp;/g,'&').replace(/&quot;/g,'"');}
+
+function startApp(){
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('warroom').classList.add('active');
+  try{localStorage.setItem('cwr_entered','1');}catch(e){}
+  renderSummary();renderGames();initBracket();
+  startScorePolling();
+}
+
+// Save/load game results to survive refresh
+function saveGameState(){
+  try{
+    var state=GAMES.map(function(g){return {result:g.result,score:g.score,payout:g.payout,time:g.time};});
+    localStorage.setItem('cwr_games',JSON.stringify(state));
+  }catch(e){}
+}
+function loadGameState(){
+  try{
+    var saved=localStorage.getItem('cwr_games');
+    if(!saved) return;
+    var state=JSON.parse(saved);
+    state.forEach(function(s,i){
+      if(i<GAMES.length && s.result){
+        GAMES[i].result=s.result;
+        GAMES[i].score=s.score;
+        GAMES[i].payout=s.payout;
+        GAMES[i].time=s.time||GAMES[i].time;
+      }
+    });
+  }catch(e){}
+}
+
+// Auto-enter if returning visitor
+loadGameState();
+function autoEnter(){
+  try{
+    if(localStorage.getItem('cwr_entered')==='1'){
+      startApp();
+    }
+  }catch(e){console.error('Auto-enter error:',e);}
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',autoEnter);
+} else {
+  autoEnter();
+}
+
+var GAMES=[
+  {day:'THU MAR 19',team:'Troy',seed:13,opp:'Nebraska',oseed:4,time:'FINAL',tv:'truTV',region:'South',mine:true,result:'L',score:'47-76',payout:0,espn:['Troy','Nebraska']},
+  {day:'THU MAR 19',team:'Louisville',seed:6,opp:'South Florida',oseed:11,time:'FINAL',tv:'TNT',region:'East',mine:true,result:'W',score:'83-79',payout:85.82,espn:['Louisville','South Florida']},
+  {day:'THU MAR 19',team:'High Point',seed:12,opp:'Wisconsin',oseed:5,time:'FINAL',tv:'TBS',region:'West',mine:true,result:'W',score:'83-82',payout:85.82,espn:['High Point','Wisconsin']},
+  {day:'THU MAR 19',team:'Vanderbilt',seed:5,opp:'McNeese',oseed:12,time:'FINAL',tv:'truTV',region:'South',mine:true,result:'W',score:'78-68',payout:85.82,espn:['Vanderbilt','McNeese']},
+  {day:'THU MAR 19',team:'UMBC/Howard',seed:16,opp:'Michigan',oseed:1,time:'5:10 CT',tv:'CBS',region:'Midwest',mine:true,result:null,score:'',payout:0,espn:['Howard','Michigan']},
+  {day:'THU MAR 19',team:'BYU',seed:6,opp:'Texas',oseed:11,time:'5:25 CT',tv:'TNT',region:'West',mine:true,result:null,score:'',payout:0,espn:['BYU','Texas']},
+  {day:'THU MAR 19',team:'Texas A&M',seed:10,opp:'Saint Mary\'s',oseed:7,time:'5:35 CT',tv:'TBS',region:'South',mine:true,result:null,score:'',payout:0,espn:['Texas A&M','Saint Mary\'s']},
+  {day:'FRI MAR 20',team:'Akron',seed:12,opp:'Texas Tech',oseed:5,time:'10:40 CT',tv:'truTV',region:'Midwest',mine:true,result:null,score:'',payout:0,espn:['Akron','Texas Tech']},
+  {day:'FRI MAR 20',team:'Arizona',seed:1,opp:'LIU',oseed:16,time:'11:35 CT',tv:'TBS',region:'West',mine:true,result:null,score:'',payout:0,espn:['Arizona','LIU']},
+  {day:'FRI MAR 20',team:'St. John\'s',seed:5,opp:'Northern Iowa',oseed:12,time:'5:10 CT',tv:'TNT',region:'East',mine:true,result:null,score:'',payout:0,espn:['St. John\'s','Northern Iowa']},
+  {day:'FRI MAR 20',team:'Miami (FL)',seed:7,opp:'Missouri',oseed:10,time:'8:10 CT',tv:'TBS',region:'West',mine:true,result:null,score:'',payout:0,espn:['Miami','Missouri']}
+];
+
+// ===== LIVE SCORE ENGINE =====
+var SCORE_API='https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard';
+var liveScoreActive=false;
+var scoreInterval=null;
+
+function getScoreURLs(){
+  // Fetch both tournament days to cover all our games
+  return [
+    SCORE_API+'?dates=20260319&groups=100&limit=50',
+    SCORE_API+'?dates=20260320&groups=100&limit=50'
+  ];
+}
+
+function nameMatch(espnName,ourNames){
+  var n=espnName.toLowerCase();
+  for(var i=0;i<ourNames.length;i++){
+    var m=ourNames[i].toLowerCase();
+    if(n.indexOf(m)>=0||m.indexOf(n)>=0) return true;
+    // Handle partial matches
+    if(m==='mcneese'&&n.indexOf('mcneese')>=0) return true;
+    if(m==='liu'&&(n.indexOf('long island')>=0||n.indexOf('liu')>=0)) return true;
+    if(m==='howard'&&n.indexOf('howard')>=0) return true;
+    if(m==='miami'&&n.indexOf('miami')>=0&&n.indexOf('ohio')<0) return true;
+    if(m==="saint mary's"&&n.indexOf('saint mary')>=0) return true;
+    if(m==="st. john's"&&(n.indexOf('st. john')>=0||n.indexOf('saint john')>=0)) return true;
+  }
+  return false;
+}
+
+function fetchScores(){
+  var urls=getScoreURLs();
+  Promise.all(urls.map(function(u){
+    return fetch(u).then(function(r){return r.json();}).catch(function(){return {events:[]};});
+  })).then(function(results){
+    if(!liveScoreActive){
+      liveScoreActive=true;
+      renderGames();
+    }
+    var allEvents=[];
+    results.forEach(function(data){
+      if(data.events) allEvents=allEvents.concat(data.events);
+    });
+    var changed=false;
+    allEvents.forEach(function(ev){
+      var comps=ev.competitions&&ev.competitions[0];
+      if(!comps) return;
+      var teams=comps.competitors||[];
+      if(teams.length<2) return;
+      var home=teams.find(function(t){return t.homeAway==='home';});
+      var away=teams.find(function(t){return t.homeAway==='away';});
+      if(!home||!away) return;
+
+      var homeName=home.team.displayName||home.team.shortDisplayName||home.team.name||'';
+      var awayName=away.team.displayName||away.team.shortDisplayName||away.team.name||'';
+      var homeScore=parseInt(home.score)||0;
+      var awayScore=parseInt(away.score)||0;
+      var status=comps.status||{};
+      var state=status.type?status.type.name:'';
+      var clock=status.displayClock||'';
+      var period=status.period||0;
+
+      GAMES.forEach(function(g,idx){
+        if(g.result==='W'||g.result==='L') return;
+        var ourTeamName=g.espn[0];
+        var oppTeamName=g.espn[1];
+        var ourIsHome=nameMatch(homeName,[ourTeamName]);
+        var ourIsAway=nameMatch(awayName,[ourTeamName]);
+        var oppIsHome=nameMatch(homeName,[oppTeamName]);
+        var oppIsAway=nameMatch(awayName,[oppTeamName]);
+
+        if((ourIsHome&&oppIsAway)||(ourIsAway&&oppIsHome)){
+          var ourScore=ourIsHome?homeScore:awayScore;
+          var oppScore=ourIsHome?awayScore:homeScore;
+
+          if(state==='STATUS_FINAL'){
+            g.result=ourScore>oppScore?'W':'L';
+            g.score=ourScore+'-'+oppScore;
+            g.payout=g.result==='W'?85.82:0;
+            g.time='FINAL';
+            g.live=null;
+            changed=true;
+            saveGameState();
+          } else if(state==='STATUS_IN_PROGRESS'){
+            g.live={our:ourScore,opp:oppScore,clock:clock,period:period};
+            g.score=ourScore+'-'+oppScore;
+            changed=true;
+          } else if(state==='STATUS_HALFTIME'){
+            g.live={our:ourScore,opp:oppScore,clock:'HALF',period:2};
+            g.score=ourScore+'-'+oppScore;
+            changed=true;
+          }
+        }
+      });
+    });
+    if(changed){
+      renderGames();
+      renderSummary();
+    }
+  }).catch(function(err){
+    console.log('Score fetch failed:',err.message);
+  });
+}
+
+function startScorePolling(){
+  fetchScores();
+  scoreInterval=setInterval(fetchScores,30000); // every 30 seconds
+}
+
+
+function calcGamePnl(){
+  var won=0;
+  GAMES.forEach(function(g){if(g.result==='W')won+=g.payout;});
+  return won;
+}
+
+function markResult(idx,result){
+  GAMES[idx].result=result;
+  GAMES[idx].payout=result==='W'?85.82:0;
+  GAMES[idx].time='FINAL';
+  saveGameState();
+  renderGames();
+  renderSummary();
+}
+
+function renderGames(){
+  var el=document.getElementById('gamesContent');
+  var totalWon=calcGamePnl();
+  var gamesPlayed=0,gamesWon=0;
+  GAMES.forEach(function(g){if(g.result)gamesPlayed++;if(g.result==='W')gamesWon++;});
+  var pnl=totalWon-CHRIS_SPENT;
+
+  var h='<div style="background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:12px;margin:8px 0;text-align:center">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-family:var(--font-display);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Game Tracker</div>';
+  h+='<div style="font-size:10px;color:var(--text3)">'+(liveScoreActive?'<span style="display:inline-block;width:6px;height:6px;background:#22c55e;border-radius:50%;margin-right:4px;animation:pulse 1.5s infinite"></span>Live scores active':'<span style="color:var(--orange)">Manual mode — scores auto-update if ESPN API available</span>')+'</div></div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
+  h+='<div><div style="font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--orange)">'+gamesPlayed+'/11</div><div style="font-size:9px;color:var(--text3)">PLAYED</div></div>';
+  h+='<div><div style="font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--green)">'+gamesWon+'</div><div style="font-size:9px;color:var(--text3)">R64 WINS</div></div>';
+  h+='<div><div style="font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--green)">$'+Math.round(totalWon)+'</div><div style="font-size:9px;color:var(--text3)">WINNINGS</div></div>';
+  h+='<div><div style="font-family:var(--font-display);font-size:20px;font-weight:600;color:'+(pnl>=0?'var(--green)':'var(--red)')+'">$'+(pnl>=0?'+':'')+Math.round(pnl)+'</div><div style="font-size:9px;color:var(--text3)">P&L</div></div>';
+  h+='</div></div>';
+
+  var lastDay='';
+  GAMES.forEach(function(g,i){
+    if(g.day!==lastDay){h+='<div class="gm-day">'+g.day+'</div>';lastDay=g.day;}
+    var cls='gm-card mine';
+    if(g.result==='W')cls+=' gm-won';
+    if(g.result==='L')cls+=' gm-lost';
+    if(g.live)cls+=' gm-live';
+    h+='<div class="'+cls+'">';
+    h+='<div class="gm-left">';
+    h+='<div class="gm-matchup"><span class="seed">('+g.seed+')</span> '+g.team+' vs <span class="seed">('+g.oseed+')</span> '+g.opp+'</div>';
+    h+='<div class="gm-meta">'+g.region+' &bull; '+g.tv+'</div>';
+    h+='</div>';
+    h+='<div class="gm-right">';
+    if(g.result==='W'){
+      h+='<div style="font-size:14px;font-weight:800;color:var(--green)">W '+g.score+'</div>';
+      h+='<div style="font-size:10px;color:var(--green)">+$86</div>';
+    } else if(g.result==='L'){
+      h+='<div style="font-size:14px;font-weight:800;color:var(--red)">L '+g.score+'</div>';
+      h+='<div style="font-size:10px;color:var(--red)">$0</div>';
+    } else if(g.live){
+      var leading=g.live.our>g.live.opp;
+      h+='<div class="gm-live-badge">LIVE</div>';
+      h+='<div style="font-size:16px;font-weight:800;color:'+(leading?'var(--green)':'var(--red)')+'">'+g.live.our+'-'+g.live.opp+'</div>';
+      h+='<div style="font-size:10px;color:var(--text2)">'+(g.live.clock==='HALF'?'Halftime':g.live.clock+' &bull; '+(g.live.period===1?'1st Half':'2nd Half'))+'</div>';
+    } else {
+      h+='<div class="gm-time">'+g.time+'</div>';
+      h+='<div style="margin-top:4px;display:flex;gap:4px">';
+      h+='<button data-gw="'+i+'" style="background:rgba(46,204,113,0.12);color:var(--green);border:1px solid var(--green3);padding:3px 10px;border-radius:4px;font-family:var(--font-display);font-size:10px;font-weight:500;cursor:pointer;letter-spacing:0.5px">WIN</button>';
+      h+='<button data-gl="'+i+'" style="background:var(--red2);color:var(--red);border:1px solid rgba(231,76,60,0.25);padding:3px 10px;border-radius:4px;font-family:var(--font-display);font-size:10px;font-weight:500;cursor:pointer;letter-spacing:0.5px">LOSS</button>';
+      h+='</div>';
+    }
+    h+='</div></div>';
+  });
+  el.innerHTML=h;
+}
+
+function showPage(p){
+  document.querySelectorAll('.page').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.ntab').forEach(function(el){el.classList.remove('active');});
+  document.getElementById('pg-'+p).classList.add('active');
+  var tabs=document.querySelectorAll('.ntab');
+  for(var i=0;i<tabs.length;i++){if(tabs[i].textContent.trim().toLowerCase().indexOf(p)>=0)tabs[i].classList.add('active');}
+  if(p==='bracket'){renderTeamStatus();renderBrkPnl();renderBrk();}
+}
+
+function renderTeamStatus(){
+  var el=document.getElementById('teamStatusPnl');
+  var alive=[],elim=[],pending=[];
+  GAMES.forEach(function(g){
+    if(g.result==='W') alive.push(g.team);
+    else if(g.result==='L') elim.push(g.team);
+    else pending.push(g.team);
+  });
+  var h='<div class="ts-pnl">';
+  if(alive.length){
+    h+='<div class="ts-row" style="margin-bottom:6px"><span class="ts-label">Alive ('+alive.length+')</span>';
+    alive.forEach(function(t){h+='<span class="ts-chip alive">'+t+'</span>';});
+    h+='</div>';
+  }
+  if(pending.length){
+    h+='<div class="ts-row" style="margin-bottom:6px"><span class="ts-label">Pending ('+pending.length+')</span>';
+    pending.forEach(function(t){h+='<span class="ts-chip pending">'+t+'</span>';});
+    h+='</div>';
+  }
+  if(elim.length){
+    h+='<div class="ts-row"><span class="ts-label">Out ('+elim.length+')</span>';
+    elim.forEach(function(t){h+='<span class="ts-chip elim">'+t+'</span>';});
+    h+='</div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+// ===== SUMMARY =====
+function renderSummary(){
+  var el=document.getElementById('summaryContent');
+  // Live dashboard
+  var totalWon=calcGamePnl();
+  var alive=0,elim=0,pending=0,todayGames=[],nextGame=null;
+  var today=new Date();var todayStr=(today.getMonth()===2?'MAR':'')+(today.getDate()===19?' 19':today.getDate()===20?' 20':' '+today.getDate());
+  GAMES.forEach(function(g){
+    if(g.result==='W')alive++;
+    else if(g.result==='L')elim++;
+    else{pending++;
+      if(g.day.indexOf(todayStr)>=0) todayGames.push(g);
+      if(!nextGame) nextGame=g;
+    }
+  });
+  var pnl=totalWon-CHRIS_SPENT;
+  var teamsLeft=alive+pending;
+
+  // Calculate realized P&L (only teams that have played)
+  var realizedWon=totalWon;
+  var realizedCost=0;
+  GAMES.forEach(function(g){
+    if(g.result){
+      // Find this team's auction price
+      for(var a=0;a<AUCTION.length;a++){
+        if(AUCTION[a].team===g.team && AUCTION[a].owner==='Chris'){realizedCost+=AUCTION[a].price;break;}
+      }
+    }
+  });
+  var realizedPnl=realizedWon-realizedCost;
+  var perPerson=Math.round(pnl/3);
+
+  var h='<div class="dash">';
+  h+='<div class="dash-card"><div class="dash-val '+(pnl>=0?'gn':'rd')+'">$'+(pnl>=0?'+':'')+Math.round(pnl)+'</div><div class="dash-lbl">Total P&L</div><div class="dash-sub">Won $'+Math.round(totalWon)+' of $'+CHRIS_SPENT+' spent</div></div>';
+  h+='<div class="dash-card"><div class="dash-val '+(realizedPnl>=0?'gn':'rd')+'">$'+(realizedPnl>=0?'+':'')+Math.round(realizedPnl)+'</div><div class="dash-lbl">Realized P&L</div><div class="dash-sub">$'+Math.round(realizedWon)+' won on $'+Math.round(realizedCost)+' played</div></div>';
+  h+='<div class="dash-card"><div class="dash-val '+(perPerson>=0?'gn':'rd')+'">$'+(perPerson>=0?'+':'')+perPerson+'</div><div class="dash-lbl">Per person</div><div class="dash-sub">3-way split of total P&L</div></div>';
+  h+='<div class="dash-card dash-link" onclick="showPage(\'games\')"><div class="dash-val">'+teamsLeft+'<span class="dash-dim">/11</span></div><div class="dash-lbl">Teams alive</div><div class="dash-sub">'+alive+' advanced &bull; '+pending+' pending &bull; '+elim+' eliminated</div></div>';
+  h+='<div class="dash-card dash-link" onclick="showPage(\'games\')"><div class="dash-val" style="color:var(--orange)">'+todayGames.length+'</div><div class="dash-lbl">Games today</div><div class="dash-sub">'+(todayGames.length?todayGames.map(function(g){return g.team;}).join(', '):'None remaining')+'</div></div>';
+  h+='<div class="dash-card"><div class="dash-val" style="color:var(--orange)">'+(nextGame?nextGame.time:'—')+'</div><div class="dash-lbl">Next game</div><div class="dash-sub">'+(nextGame?nextGame.team+' vs '+nextGame.opp+' &bull; '+nextGame.tv:'All games complete')+'</div></div>';
+  h+='</div>';
+
+  var groups={};
+  AUCTION.forEach(function(a){
+    if(!groups[a.owner])groups[a.owner]={spend:0,count:0,teams:[],ev:0};
+    var d=dataLookup[a.team];var ev=d?liveEV(d):0;
+    groups[a.owner].spend+=a.price;groups[a.owner].count++;groups[a.owner].ev+=ev;
+    groups[a.owner].teams.push({team:a.team,seed:a.seed,region:a.region,price:a.price,ev:ev});
+  });
+  var me=groups['Chris'];var edge=me.ev-me.spend;
+  h+='<div class="sc"><h3>Your portfolio — Team Chris</h3>';
+  h+='<div class="sg">';
+  h+='<div class="ss"><div class="sv">$'+me.spend+'</div><div class="sl">Spent</div></div>';
+  h+='<div class="ss"><div class="sv">$'+Math.round(me.ev)+'</div><div class="sl">Live EV</div></div>';
+  h+='<div class="ss"><div class="sv '+(edge>=0?'gn':'rd')+'">$'+(edge>=0?'+':'')+Math.round(edge)+'</div><div class="sl">Edge</div></div>';
+  h+='<div class="ss"><div class="sv">'+me.count+'</div><div class="sl">Teams</div></div>';
+  h+='<div class="ss"><div class="sv">'+(me.spend>0?Math.round((me.ev/me.spend-1)*100):'--')+'%</div><div class="sl">ROI</div></div>';
+  h+='</div>';
+  me.teams.sort(function(a,b){return b.ev-a.ev;});
+  me.teams.forEach(function(t){
+    var d2=t.ev-t.price;
+    h+='<div class="sr"><div><span class="sn">'+t.team+'</span> <span class="sd2">('+t.seed+', '+t.region+')</span></div><div><span class="sp">$'+t.price+'</span> <span class="se '+(d2>=0?'gn':'rd')+'">EV $'+Math.round(t.ev)+' ('+(d2>=0?'+':'')+Math.round(d2)+')</span></div></div>';
+  });
+  h+='</div>';
+
+  // Payouts
+  h+='<div class="sc"><h3>Payout structure — $'+FINAL_POT.toLocaleString()+' pot</h3><div class="sg">';
+  PAYOUT_LABELS.forEach(function(p){h+='<div class="ss"><div class="sv">$'+Math.round(PAYOUTS[p.key])+'</div><div class="sl">'+p.label+' ('+p.pct+')</div></div>';});
+  h+='<div class="ss" style="background:rgba(240,192,64,0.08)"><div class="sv" style="color:#f0c040">$'+Math.round(FINAL_POT*0.265)+'</div><div class="sl">Full run</div></div>';
+  h+='</div></div>';
+
+  // Break-even
+  h+='<div class="sc"><h3>Break-even scenarios</h3><div style="font-size:11px;color:#bbb;line-height:1.8">';
+  h+='<strong style="color:#22c55e">Arizona FF:</strong> $'+Math.round(PAYOUTS.r64+PAYOUTS.r32+PAYOUTS.s16+PAYOUTS.e8+PAYOUTS.ff)+' (covers $1,000 + $459 profit)<br>';
+  h+='<strong style="color:#22c55e">Louisville S16:</strong> $'+Math.round(PAYOUTS.r64+PAYOUTS.r32+PAYOUTS.s16)+' (covers $120 + $424 profit)<br>';
+  h+='<strong style="color:#22c55e">Arizona FF + Louisville S16:</strong> $'+Math.round(PAYOUTS.r64*2+PAYOUTS.r32*2+PAYOUTS.s16*2+PAYOUTS.e8+PAYOUTS.ff)+' — nearly entire $2,009 back<br>';
+  h+='<strong style="color:#22c55e">Arizona wins it all:</strong> $'+Math.round(PAYOUTS.r64+PAYOUTS.r32+PAYOUTS.s16+PAYOUTS.e8+PAYOUTS.ff+PAYOUTS.champ)+' from Arizona alone<br>';
+  h+='<br>Any team that wins 1 game pays <strong>$'+Math.round(PAYOUTS.r64)+'</strong>. You have 11 teams.';
+  h+='</div></div>';
+
+  // All groups
+  h+='<div class="sc"><h3>All groups comparison</h3>';
+  var ga=[];for(var g in groups)ga.push({name:g,d:groups[g]});
+  ga.sort(function(a,b){return(b.d.ev-b.d.spend)-(a.d.ev-a.d.spend);});
+  ga.forEach(function(g){
+    var isMe=g.name==='Chris';var e2=g.d.ev-g.d.spend;var eff=g.d.spend>0?Math.round(g.d.ev/g.d.spend*100):0;
+    h+='<div class="gc'+(isMe?' me':'')+'"><h4>'+g.name+(isMe?' (YOU)':'')+' — $'+g.d.spend+' spent, '+g.d.count+' teams, EV $'+Math.round(g.d.ev)+' <span style="color:'+(e2>=0?'#22c55e':'#ef4444')+'">('+( e2>=0?'+':'')+Math.round(e2)+', '+eff+'%)</span></h4>';
+    g.d.teams.sort(function(a,b){return b.price-a.price;});
+    h+='<div style="font-size:9px;color:#7a8299">'+g.d.teams.slice(0,4).map(function(t){return t.team+' $'+t.price;}).join(', ')+'</div></div>';
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+// ===== BRACKET STATE =====
+function initBracket(){
+  brkState={};brkWinnings=0;
+  ['East','South','West','Midwest'].forEach(function(rgn){
+    var games=BRACKET[rgn];
+    brkState[rgn]={
+      r64:games.map(function(g){return{a:g[0],b:g[1],winner:null};}),
+      r32:[null,null,null,null],s16:[null,null],e8:null,winner:null
+    };
+  });
+  brkState.ff={s1:null,s2:null,champ:null};
+}
+
+function advanceTeam(rgn,round,gi,pick){
+  var s=brkState[rgn];
+  if(round==='r64'){
+    // Toggle: if this team is already the winner, undo it
+    if(s.r64[gi].winner&&s.r64[gi].winner[0]===pick[0]){
+      s.r64[gi].winner=null;
+      var ri=Math.floor(gi/2),sl=gi%2;
+      if(s.r32[ri]){s.r32[ri][sl===0?'a':'b']=null;s.r32[ri].winner=null;clearDown(rgn,'r32',ri);}
+    } else {
+      s.r64[gi].winner=pick;
+      var ri=Math.floor(gi/2),sl=gi%2;
+      if(!s.r32[ri])s.r32[ri]={a:null,b:null,winner:null};
+      s.r32[ri][sl===0?'a':'b']=pick;
+      s.r32[ri].winner=null;clearDown(rgn,'r32',ri);
+    }
+  } else if(round==='r32'){
+    if(s.r32[gi].winner&&s.r32[gi].winner[0]===pick[0]){
+      s.r32[gi].winner=null;
+      var si=Math.floor(gi/2),sl=gi%2;
+      if(s.s16[si]){s.s16[si][sl===0?'a':'b']=null;s.s16[si].winner=null;clearDown(rgn,'s16',si);}
+    } else {
+      s.r32[gi].winner=pick;
+      var si=Math.floor(gi/2),sl=gi%2;
+      if(!s.s16[si])s.s16[si]={a:null,b:null,winner:null};
+      s.s16[si][sl===0?'a':'b']=pick;
+      s.s16[si].winner=null;clearDown(rgn,'s16',si);
+    }
+  } else if(round==='s16'){
+    if(s.s16[gi].winner&&s.s16[gi].winner[0]===pick[0]){
+      s.s16[gi].winner=null;
+      if(s.e8){s.e8[gi===0?'a':'b']=null;s.e8.winner=null;}
+      s.winner=null;clearFF();
+    } else {
+      s.s16[gi].winner=pick;
+      if(!s.e8)s.e8={a:null,b:null,winner:null};
+      s.e8[gi===0?'a':'b']=pick;
+      s.e8.winner=null;s.winner=null;clearFF();
+    }
+  } else if(round==='e8'){
+    if(s.e8.winner&&s.e8.winner[0]===pick[0]){
+      s.e8.winner=null;s.winner=null;clearFF();
+    } else {
+      s.e8.winner=pick;s.winner=pick;updateFF();
+    }
+  }
+  calcW();renderBrkPnl();renderBrk();
+}
+
+function clearDown(rgn,fr,idx){
+  var s=brkState[rgn];
+  if(fr==='r32'){var si=Math.floor(idx/2);if(s.s16[si])s.s16[si].winner=null;if(s.e8)s.e8.winner=null;s.winner=null;clearFF();}
+  else if(fr==='s16'){if(s.e8)s.e8.winner=null;s.winner=null;clearFF();}
+}
+function clearFF(){brkState.ff={s1:null,s2:null,champ:null};}
+function updateFF(){
+  var ff=brkState.ff;ff.s1=null;ff.s2=null;ff.champ=null;
+  var sw=brkState.South.winner,ew=brkState.East.winner;
+  var ww=brkState.West.winner,mw=brkState.Midwest.winner;
+  if(sw&&ew)ff.s1={a:sw,b:ew,winner:null};
+  if(ww&&mw)ff.s2={a:ww,b:mw,winner:null};
+}
+function advanceFF(semi,pick){
+  var ff=brkState.ff;
+  if(semi===1&&ff.s1){
+    if(ff.s1.winner&&ff.s1.winner[0]===pick[0]){ff.s1.winner=null;}
+    else{ff.s1.winner=pick;}
+    ff.champ=null;
+  }
+  if(semi===2&&ff.s2){
+    if(ff.s2.winner&&ff.s2.winner[0]===pick[0]){ff.s2.winner=null;}
+    else{ff.s2.winner=pick;}
+    ff.champ=null;
+  }
+  calcW();renderBrkPnl();renderBrk();
+}
+function advanceChamp(pick){
+  var ff=brkState.ff;
+  if(ff.champ&&ff.champ[0]===pick[0]){ff.champ=null;}
+  else{ff.champ=pick;}
+  calcW();renderBrkPnl();renderBrk();
+}
+function clearBracket(){initBracket();calcW();renderBrkPnl();renderBrk();}
+
+function calcW(){
+  brkWinnings=0;
+  ['East','South','West','Midwest'].forEach(function(rgn){
+    var s=brkState[rgn];
+    s.r64.forEach(function(g){if(g.winner&&isMine(g.winner[0]))brkWinnings+=PAYOUTS.r64;});
+    s.r32.forEach(function(g){if(g&&g.winner&&isMine(g.winner[0]))brkWinnings+=PAYOUTS.r32;});
+    s.s16.forEach(function(g){if(g&&g.winner&&isMine(g.winner[0]))brkWinnings+=PAYOUTS.s16;});
+    if(s.e8&&s.e8.winner&&isMine(s.e8.winner[0]))brkWinnings+=PAYOUTS.e8;
+  });
+  var ff=brkState.ff;
+  if(ff.s1&&ff.s1.winner&&isMine(ff.s1.winner[0]))brkWinnings+=PAYOUTS.ff;
+  if(ff.s2&&ff.s2.winner&&isMine(ff.s2.winner[0]))brkWinnings+=PAYOUTS.ff;
+  if(ff.champ&&isMine(ff.champ[0]))brkWinnings+=PAYOUTS.champ;
+}
+
+// ===== BRACKET PANEL =====
+function renderBrkPnl(){
+  var el=document.getElementById('brkPnl');
+  var pnl=brkWinnings-CHRIS_SPENT;
+  var h='<div class="bpg">';
+  PAYOUT_LABELS.forEach(function(p){h+='<div class="bpc"><div class="bpr">'+p.label+'</div><div class="bpa">$'+Math.round(PAYOUTS[p.key])+'</div></div>';});
+  h+='<div class="bpc"><div class="bpr">Won</div><div class="bpa" style="color:#22c55e">$'+Math.round(brkWinnings)+'</div></div>';
+  h+='<div class="bpc bpcx"><div class="bpr">P&L</div><div class="bpa '+(pnl>=0?'pos':'neg')+'">$'+(pnl>=0?'+':'')+Math.round(pnl)+'</div></div>';
+  h+='</div>';
+  h+='<div class="bpl">Spent: <b>$'+CHRIS_SPENT+'</b> | Won: <b style="color:#22c55e">$'+Math.round(brkWinnings)+'</b> | P&L: <b style="color:'+(pnl>=0?'#22c55e':'#ef4444')+'">$'+(pnl>=0?'+':'')+Math.round(pnl)+'</b></div>';
+  el.innerHTML=h;
+}
+
+// ===== BRACKET RENDER (AuctionCutta-style mirrored layout) =====
+function teamInfo(team){
+  if(!team)return null;
+  var a=null;
+  for(var i=0;i<AUCTION.length;i++){if(AUCTION[i].team===team[0]){a=AUCTION[i];break;}}
+  return{name:team[0],seed:team[1],owner:a?a.owner+'  and Co':'',price:a?'$'+a.price:''};
+}
+
+function slot(team,cls,attr){
+  if(!team)return '<div class="brk-tm empty"><div class="tm-info"><div class="tm-name">TBD</div></div></div>';
+  var t=teamInfo(team);
+  var m=isMine(team[0])?'mine':'';
+  return '<div class="brk-tm '+m+' '+cls+'" '+attr+'><span class="tm-seed">'+t.seed+'</span><div class="tm-info"><div class="tm-name">'+t.name+'</div><div class="tm-owner">'+t.owner+'</div></div><span class="tm-price">'+t.price+'</span></div>';
+}
+
+function slotAdv(team,cls,attr){
+  if(!team)return '<div class="brk-tm empty"><div class="tm-info"><div class="tm-name">TBD</div></div></div>';
+  var m=isMine(team[0])?'mine':'';
+  return '<div class="brk-tm '+m+' '+cls+'" '+attr+'><span class="tm-seed">'+team[1]+'</span><div class="tm-info"><div class="tm-name">'+team[0]+'</div></div></div>';
+}
+
+function renderRegion(rgn,mirrored){
+  var s=brkState[rgn];
+  var dir=mirrored?'rtl':'ltr';
+  var rounds=['r64','r32','s16','e8'];
+  var labels=['1ST ROUND','2ND ROUND','SWEET 16','ELITE 8'];
+  if(mirrored){rounds.reverse();labels.reverse();}
+
+  var h='<div class="brk-rgn-title '+rgn.toLowerCase()+'">'+rgn+'</div>';
+  h+='<div class="brk-hdrs '+dir+'">';
+  labels.forEach(function(l){h+='<div>'+l+'</div>';});
+  h+='</div>';
+  h+='<div class="brk-cols '+dir+'">';
+
+  // Build each round column
+  var colOrder=mirrored?['e8','s16','r32','r64']:['r64','r32','s16','e8'];
+  colOrder.forEach(function(rnd){
+    h+='<div class="brk-col">';
+    if(rnd==='r64'){
+      s.r64.forEach(function(g,gi){
+        var wa=g.winner&&g.winner[0]===g.a[0],wb=g.winner&&g.winner[0]===g.b[0];
+        h+='<div class="brk-mu">';
+        h+=slot(g.a,wa?'pk':'','data-adv="'+esc(rgn)+'|r64|'+gi+'|'+esc(g.a[0])+'|'+g.a[1]+'"');
+        h+=slot(g.b,wb?'pk':'','data-adv="'+esc(rgn)+'|r64|'+gi+'|'+esc(g.b[0])+'|'+g.b[1]+'"');
+        h+='</div>';
+      });
+    } else if(rnd==='r32'){
+      for(var i=0;i<4;i++){
+        var g=s.r32[i];
+        var mt=(i===0)?'12':'24';
+        h+='<div class="brk-mu" style="margin-top:'+mt+'px">';
+        if(g){
+          var wa=g.winner&&g.a&&g.winner[0]===g.a[0],wb=g.winner&&g.b&&g.winner[0]===g.b[0];
+          h+=g.a?slotAdv(g.a,wa?'pk':'','data-adv="'+esc(rgn)+'|r32|'+i+'|'+esc(g.a[0])+'|'+g.a[1]+'"'):slot(null,'','');
+          h+=g.b?slotAdv(g.b,wb?'pk':'','data-adv="'+esc(rgn)+'|r32|'+i+'|'+esc(g.b[0])+'|'+g.b[1]+'"'):slot(null,'','');
+        } else {h+=slot(null,'','');h+=slot(null,'','');}
+        h+='</div>';
+      }
+    } else if(rnd==='s16'){
+      for(var i=0;i<2;i++){
+        var g=s.s16[i];
+        var mt=(i===0)?'40':'60';
+        h+='<div class="brk-mu" style="margin-top:'+mt+'px">';
+        if(g){
+          var wa=g.winner&&g.a&&g.winner[0]===g.a[0],wb=g.winner&&g.b&&g.winner[0]===g.b[0];
+          h+=g.a?slotAdv(g.a,wa?'pk':'','data-adv="'+esc(rgn)+'|s16|'+i+'|'+esc(g.a[0])+'|'+g.a[1]+'"'):slot(null,'','');
+          h+=g.b?slotAdv(g.b,wb?'pk':'','data-adv="'+esc(rgn)+'|s16|'+i+'|'+esc(g.b[0])+'|'+g.b[1]+'"'):slot(null,'','');
+        } else {h+=slot(null,'','');h+=slot(null,'','');}
+        h+='</div>';
+      }
+    } else if(rnd==='e8'){
+      h+='<div class="brk-mu" style="margin-top:100px">';
+      if(s.e8){
+        var wa=s.e8.winner&&s.e8.a&&s.e8.winner[0]===s.e8.a[0],wb=s.e8.winner&&s.e8.b&&s.e8.winner[0]===s.e8.b[0];
+        h+=s.e8.a?slotAdv(s.e8.a,wa?'pk':'','data-adv="'+esc(rgn)+'|e8|0|'+esc(s.e8.a[0])+'|'+s.e8.a[1]+'"'):slot(null,'','');
+        h+=s.e8.b?slotAdv(s.e8.b,wb?'pk':'','data-adv="'+esc(rgn)+'|e8|0|'+esc(s.e8.b[0])+'|'+s.e8.b[1]+'"'):slot(null,'','');
+      } else {h+=slot(null,'','');h+=slot(null,'','');}
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function renderBrk(){
+  var el=document.getElementById('bracketContent');
+  var ff=brkState.ff;
+  var h='<div class="brk-wrap">';
+
+  // Left half: South (top), East (bottom)
+  h+='<div class="brk-half">';
+  h+='<div class="brk-rgn">'+renderRegion('South',false)+'</div>';
+  h+='<div class="brk-rgn">'+renderRegion('East',false)+'</div>';
+  h+='</div>';
+
+  // Center connector
+  h+='<div class="brk-center-strip">';
+  h+='<div class="brk-center-line"></div>';
+  h+='<div class="brk-center-label">FINAL<br>FOUR</div>';
+  h+='<div class="brk-center-line"></div>';
+  h+='</div>';
+
+  // Right half: West (top), Midwest (bottom)
+  h+='<div class="brk-half">';
+  h+='<div class="brk-rgn">'+renderRegion('West',true)+'</div>';
+  h+='<div class="brk-rgn">'+renderRegion('Midwest',true)+'</div>';
+  h+='</div>';
+
+  // Final Four (full width center)
+  h+='<div class="brk-ff-center">';
+  h+='<div class="brk-ff-label">Final Four</div>';
+  h+='<div class="brk-ff-semis">';
+
+  // Semi 1: South vs East
+  h+='<div class="brk-ff-game"><div class="brk-ff-game-label">South vs East</div>';
+  if(ff.s1){
+    var wa=ff.s1.winner&&ff.s1.a&&ff.s1.winner[0]===ff.s1.a[0],wb=ff.s1.winner&&ff.s1.b&&ff.s1.winner[0]===ff.s1.b[0];
+    h+=ff.s1.a?slotAdv(ff.s1.a,wa?'pk':'','data-ff="1|'+esc(ff.s1.a[0])+'|'+ff.s1.a[1]+'"'):slot(null,'','');
+    h+=ff.s1.b?slotAdv(ff.s1.b,wb?'pk':'','data-ff="1|'+esc(ff.s1.b[0])+'|'+ff.s1.b[1]+'"'):slot(null,'','');
+  } else {h+=slot(null,'','');h+=slot(null,'','');}
+  h+='</div>';
+  h+='<div class="brk-ff-vs">VS</div>';
+
+  // Semi 2: West vs Midwest
+  h+='<div class="brk-ff-game"><div class="brk-ff-game-label">West vs Midwest</div>';
+  if(ff.s2){
+    var wa=ff.s2.winner&&ff.s2.a&&ff.s2.winner[0]===ff.s2.a[0],wb=ff.s2.winner&&ff.s2.b&&ff.s2.winner[0]===ff.s2.b[0];
+    h+=ff.s2.a?slotAdv(ff.s2.a,wa?'pk':'','data-ff="2|'+esc(ff.s2.a[0])+'|'+ff.s2.a[1]+'"'):slot(null,'','');
+    h+=ff.s2.b?slotAdv(ff.s2.b,wb?'pk':'','data-ff="2|'+esc(ff.s2.b[0])+'|'+ff.s2.b[1]+'"'):slot(null,'','');
+  } else {h+=slot(null,'','');h+=slot(null,'','');}
+  h+='</div></div>';
+
+  // Championship
+  h+='<div class="brk-champ-box"><div class="brk-champ-label">Championship</div>';
+  if(ff.s1&&ff.s1.winner&&ff.s2&&ff.s2.winner){
+    var c1=ff.champ&&ff.champ[0]===ff.s1.winner[0],c2=ff.champ&&ff.champ[0]===ff.s2.winner[0];
+    h+=slotAdv(ff.s1.winner,c1?'pk':'','data-champ="'+esc(ff.s1.winner[0])+'|'+ff.s1.winner[1]+'"');
+    h+=slotAdv(ff.s2.winner,c2?'pk':'','data-champ="'+esc(ff.s2.winner[0])+'|'+ff.s2.winner[1]+'"');
+  } else {h+=slot(null,'','');h+=slot(null,'','');}
+  if(ff.champ){
+    h+='<div class="brk-champ-winner">'+ff.champ[0]+'</div>';
+  }
+  h+='</div>';
+  h+='</div>';
+
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+// ===== EVENT DELEGATION =====
+document.addEventListener('click',function(e){
+  var gw=e.target.closest('[data-gw]');
+  if(gw){markResult(parseInt(gw.getAttribute('data-gw')),'W');return;}
+  var gl=e.target.closest('[data-gl]');
+  if(gl){markResult(parseInt(gl.getAttribute('data-gl')),'L');return;}
+  var el=e.target.closest('[data-adv]');
+  if(el){var p=el.getAttribute('data-adv').split('|');advanceTeam(decEsc(p[0]),p[1],parseInt(p[2]),[decEsc(p[3]),parseInt(p[4])]);return;}
+  var el2=e.target.closest('[data-ff]');
+  if(el2){var p=el2.getAttribute('data-ff').split('|');advanceFF(parseInt(p[0]),[decEsc(p[1]),parseInt(p[2])]);return;}
+  var el3=e.target.closest('[data-champ]');
+  if(el3){var p=el3.getAttribute('data-champ').split('|');advanceChamp([decEsc(p[0]),parseInt(p[1])]);return;}
+});
+
+</script>
+</body>
+</html>
