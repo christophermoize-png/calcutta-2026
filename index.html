@@ -210,11 +210,18 @@ function loadGameState(){
 
 // Auto-enter if returning visitor
 loadGameState();
-try{
-  if(localStorage.getItem('cwr_entered')==='1'){
-    startApp();
-  }
-}catch(e){}
+function autoEnter(){
+  try{
+    if(localStorage.getItem('cwr_entered')==='1'){
+      startApp();
+    }
+  }catch(e){console.error('Auto-enter error:',e);}
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',autoEnter);
+} else {
+  autoEnter();
+}
 
 var GAMES=[
   {day:'THU MAR 19',team:'Troy',seed:13,opp:'Nebraska',oseed:4,time:'FINAL',tv:'truTV',region:'South',mine:true,result:'L',score:'47-76',payout:0,espn:['Troy','Nebraska']},
@@ -462,23 +469,22 @@ function renderSummary(){
   var pnl=totalWon-CHRIS_SPENT;
   var teamsLeft=alive+pending;
 
-  // Calculate realized P&L (only teams that have played)
+  // Calculate realized P&L (winnings minus dead money from eliminated teams)
   var realizedWon=totalWon;
-  var realizedCost=0;
+  var deadMoney=0;
   GAMES.forEach(function(g){
-    if(g.result){
-      // Find this team's auction price
+    if(g.result==='L'){
       for(var a=0;a<AUCTION.length;a++){
-        if(AUCTION[a].team===g.team && AUCTION[a].owner==='Chris'){realizedCost+=AUCTION[a].price;break;}
+        if(AUCTION[a].team===g.team && AUCTION[a].owner==='Chris'){deadMoney+=AUCTION[a].price;break;}
       }
     }
   });
-  var realizedPnl=realizedWon-realizedCost;
+  var realizedPnl=realizedWon-deadMoney;
   var perPerson=Math.round(pnl/3);
 
   var h='<div class="dash">';
   h+='<div class="dash-card"><div class="dash-val '+(pnl>=0?'gn':'rd')+'">$'+(pnl>=0?'+':'')+Math.round(pnl)+'</div><div class="dash-lbl">Total P&L</div><div class="dash-sub">Won $'+Math.round(totalWon)+' of $'+CHRIS_SPENT+' spent</div></div>';
-  h+='<div class="dash-card"><div class="dash-val '+(realizedPnl>=0?'gn':'rd')+'">$'+(realizedPnl>=0?'+':'')+Math.round(realizedPnl)+'</div><div class="dash-lbl">Realized P&L</div><div class="dash-sub">$'+Math.round(realizedWon)+' won on $'+Math.round(realizedCost)+' played</div></div>';
+  h+='<div class="dash-card"><div class="dash-val '+(realizedPnl>=0?'gn':'rd')+'">$'+(realizedPnl>=0?'+':'')+Math.round(realizedPnl)+'</div><div class="dash-lbl">Realized P&L</div><div class="dash-sub">$'+Math.round(realizedWon)+' won &bull; $'+Math.round(deadMoney)+' dead money</div></div>';
   h+='<div class="dash-card"><div class="dash-val '+(perPerson>=0?'gn':'rd')+'">$'+(perPerson>=0?'+':'')+perPerson+'</div><div class="dash-lbl">Per person</div><div class="dash-sub">3-way split of total P&L</div></div>';
   h+='<div class="dash-card dash-link" onclick="showPage(\'games\')"><div class="dash-val">'+teamsLeft+'<span class="dash-dim">/11</span></div><div class="dash-lbl">Teams alive</div><div class="dash-sub">'+alive+' advanced &bull; '+pending+' pending &bull; '+elim+' eliminated</div></div>';
   h+='<div class="dash-card dash-link" onclick="showPage(\'games\')"><div class="dash-val" style="color:var(--orange)">'+todayGames.length+'</div><div class="dash-lbl">Games today</div><div class="dash-sub">'+(todayGames.length?todayGames.map(function(g){return g.team;}).join(', '):'None remaining')+'</div></div>';
