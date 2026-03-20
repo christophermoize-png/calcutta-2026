@@ -127,6 +127,35 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);padding
 @keyframes livepulse{0%,100%{box-shadow:0 0 0 0 rgba(46,204,113,0)}50%{box-shadow:0 0 12px 2px rgba(46,204,113,0.15)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 .gm-live-badge{font-family:var(--font-display);font-size:9px;font-weight:600;color:#fff;background:var(--red);padding:1px 6px;border-radius:3px;display:inline-block;letter-spacing:1px;margin-bottom:2px;animation:pulse 1.2s infinite}
+/* Leaderboard */
+.lb-card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin:10px 0;overflow:hidden;transition:border-color 0.15s}
+.lb-card.lb-me{border-color:var(--green3)}
+.lb-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer}
+.lb-hdr:hover{background:rgba(255,255,255,0.02)}
+.lb-rank{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--text3);width:40px;text-align:center}
+.lb-card.lb-me .lb-rank{color:var(--green)}
+.lb-name{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--white);text-transform:uppercase;letter-spacing:1px}
+.lb-card.lb-me .lb-name{color:var(--green)}
+.lb-stats{display:flex;gap:16px;align-items:center}
+.lb-stat{text-align:center}
+.lb-stat-val{font-family:var(--font-display);font-size:16px;font-weight:600}
+.lb-stat-lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.lb-detail{padding:0 16px 14px;display:none}
+.lb-detail.open{display:block}
+.lb-team-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px}
+.lb-team-row:last-child{border:none}
+.lb-team-name{color:var(--text);font-weight:600}
+.lb-team-elim{color:var(--text3);text-decoration:line-through;opacity:0.5}
+.lb-team-alive{color:var(--green)}
+.lb-team-pending{color:var(--orange)}
+.lb-team-price{color:var(--orange);font-weight:700}
+.lb-team-status{font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px}
+.lb-team-status.alive{background:var(--green2);color:var(--green)}
+.lb-team-status.elim{background:var(--red2);color:var(--red)}
+.lb-team-status.pending{background:rgba(232,117,42,0.08);color:var(--orange)}
+/* Undo */
+.gm-undo{font-size:9px;color:var(--text3);cursor:pointer;margin-top:2px;text-decoration:underline;opacity:0.6}
+.gm-undo:hover{opacity:1;color:var(--orange)}
 .gm-left{flex:1}
 .gm-matchup{font-size:13px;font-weight:700;color:var(--white)}
 .gm-matchup .seed{color:var(--text3);font-size:11px;font-weight:600}
@@ -148,10 +177,12 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);padding
 <div class="ntabs">
 <div class="ntab active" onclick="showPage('summary')">Summary</div>
 <div class="ntab" onclick="showPage('games')">Games</div>
+<div class="ntab" onclick="showPage('league')">League</div>
 <div class="ntab" onclick="showPage('bracket')">Bracket</div>
 </div>
 <div id="pg-summary" class="page active"><div id="summaryContent"></div></div>
 <div id="pg-games" class="page"><div id="gamesContent"></div></div>
+<div id="pg-league" class="page"><div id="leagueContent"></div></div>
 <div id="pg-bracket" class="page"><div class="brk-clear-row"><button class="brk-clear-btn" onclick="clearBracket()">Clear Bracket</button></div><div id="teamStatusPnl"></div><div class="bpnl" id="brkPnl"></div><div id="bracketContent"></div></div>
 </div>
 <script>
@@ -330,10 +361,27 @@ function fetchScores(){
           }
         }
       });
+
+      // Track ALL auction team results for leaderboard
+      if(state==='STATUS_FINAL'){
+        AUCTION.forEach(function(a){
+          if(ALL_RESULTS[a.team]) return; // already tracked
+          var aHome=nameMatch(homeName,[a.team]);
+          var aAway=nameMatch(awayName,[a.team]);
+          if(aHome||aAway){
+            var aScore=aHome?homeScore:awayScore;
+            var oppScore2=aHome?awayScore:homeScore;
+            ALL_RESULTS[a.team]=aScore>oppScore2?'W':'L';
+            changed=true;
+          }
+        });
+        saveAllResults();
+      }
     });
     if(changed){
       renderGames();
       renderSummary();
+      if(document.getElementById('pg-league').classList.contains('active')) renderLeague();
     }
   }).catch(function(err){
     console.log('Score fetch failed:',err.message);
@@ -356,9 +404,102 @@ function markResult(idx,result){
   GAMES[idx].result=result;
   GAMES[idx].payout=result==='W'?85.82:0;
   GAMES[idx].time='FINAL';
+  // Update global results
+  ALL_RESULTS[GAMES[idx].team]=result==='W'?'W':'L';
   saveGameState();
   renderGames();
   renderSummary();
+}
+
+function undoResult(idx){
+  GAMES[idx].result=null;
+  GAMES[idx].payout=0;
+  GAMES[idx].score='';
+  GAMES[idx].live=null;
+  // Remove from global results
+  delete ALL_RESULTS[GAMES[idx].team];
+  saveGameState();
+  saveAllResults();
+  renderGames();
+  renderSummary();
+}
+
+// ===== GLOBAL RESULTS (all teams, all owners) =====
+var ALL_RESULTS={};
+
+function loadAllResults(){
+  try{
+    var saved=localStorage.getItem('cwr_all_results');
+    if(saved) ALL_RESULTS=JSON.parse(saved);
+  }catch(e){}
+  // Also sync from GAMES array
+  GAMES.forEach(function(g){
+    if(g.result==='W') ALL_RESULTS[g.team]='W';
+    else if(g.result==='L') ALL_RESULTS[g.team]='L';
+  });
+}
+function saveAllResults(){
+  try{localStorage.setItem('cwr_all_results',JSON.stringify(ALL_RESULTS));}catch(e){}
+}
+loadAllResults();
+
+// ===== LEAGUE LEADERBOARD =====
+function renderLeague(){
+  var el=document.getElementById('leagueContent');
+  var R64_PAYOUT=PAYOUTS.r64;
+
+  // Build owner data
+  var owners={};
+  AUCTION.forEach(function(a){
+    if(!owners[a.owner]) owners[a.owner]={name:a.owner,spent:0,teams:[],winnings:0,deadMoney:0,alive:0,elim:0,pending:0};
+    var o=owners[a.owner];
+    o.spent+=a.price;
+    var status='pending';
+    if(ALL_RESULTS[a.team]==='W'){status='alive';o.winnings+=R64_PAYOUT;o.alive++;}
+    else if(ALL_RESULTS[a.team]==='L'){status='elim';o.deadMoney+=a.price;o.elim++;}
+    else{o.pending++;}
+    o.teams.push({team:a.team,seed:a.seed,region:a.region,price:a.price,status:status});
+  });
+
+  // Sort by realized P&L (winnings - dead money) descending
+  var sorted=Object.values(owners).sort(function(a,b){
+    return (b.winnings-b.deadMoney)-(a.winnings-a.deadMoney);
+  });
+
+  var h='<div style="font-family:var(--font-display);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">League Standings — Realized P&L</div>';
+
+  sorted.forEach(function(o,rank){
+    var rpnl=o.winnings-o.deadMoney;
+    var isMe=o.name==='Chris';
+    h+='<div class="lb-card'+(isMe?' lb-me':'')+'">';
+    h+='<div class="lb-hdr" data-lbtoggle="'+rank+'">';
+    h+='<div style="display:flex;align-items:center;gap:12px">';
+    h+='<div class="lb-rank">#'+(rank+1)+'</div>';
+    h+='<div><div class="lb-name">Team '+o.name+(isMe?' (YOU)':'')+'</div>';
+    h+='<div style="font-size:10px;color:var(--text3);margin-top:2px">'+o.teams.length+' teams &bull; '+o.alive+' alive &bull; '+o.elim+' out &bull; '+o.pending+' pending</div>';
+    h+='</div></div>';
+    h+='<div class="lb-stats">';
+    h+='<div class="lb-stat"><div class="lb-stat-val" style="color:var(--orange)">$'+o.spent+'</div><div class="lb-stat-lbl">Spent</div></div>';
+    h+='<div class="lb-stat"><div class="lb-stat-val" style="color:var(--green)">$'+Math.round(o.winnings)+'</div><div class="lb-stat-lbl">Won</div></div>';
+    h+='<div class="lb-stat"><div class="lb-stat-val '+(rpnl>=0?'gn':'rd')+'">$'+(rpnl>=0?'+':'')+Math.round(rpnl)+'</div><div class="lb-stat-lbl">P&L</div></div>';
+    h+='</div></div>';
+
+    // Expandable team detail
+    h+='<div class="lb-detail" id="lb-detail-'+rank+'">';
+    o.teams.sort(function(a,b){return b.price-a.price;});
+    o.teams.forEach(function(t){
+      var cls=t.status==='alive'?'lb-team-alive':t.status==='elim'?'lb-team-elim':'lb-team-pending';
+      h+='<div class="lb-team-row">';
+      h+='<div><span class="'+cls+'">('+ t.seed+') '+t.team+'</span> <span style="font-size:9px;color:var(--text3)">'+t.region+'</span></div>';
+      h+='<div style="display:flex;align-items:center;gap:8px">';
+      h+='<span class="lb-team-price">$'+t.price+'</span>';
+      h+='<span class="lb-team-status '+t.status+'">'+(t.status==='alive'?'R32':t.status==='elim'?'OUT':'—')+'</span>';
+      h+='</div></div>';
+    });
+    h+='</div></div>';
+  });
+
+  el.innerHTML=h;
 }
 
 function renderGames(){
@@ -394,9 +535,11 @@ function renderGames(){
     if(g.result==='W'){
       h+='<div style="font-size:14px;font-weight:800;color:var(--green)">W '+g.score+'</div>';
       h+='<div style="font-size:10px;color:var(--green)">+$86</div>';
+      h+='<div class="gm-undo" data-undo="'+i+'">undo</div>';
     } else if(g.result==='L'){
       h+='<div style="font-size:14px;font-weight:800;color:var(--red)">L '+g.score+'</div>';
       h+='<div style="font-size:10px;color:var(--red)">$0</div>';
+      h+='<div class="gm-undo" data-undo="'+i+'">undo</div>';
     } else if(g.live){
       var leading=g.live.our>g.live.opp;
       h+='<div class="gm-live-badge">LIVE</div>';
@@ -421,6 +564,8 @@ function showPage(p){
   var tabs=document.querySelectorAll('.ntab');
   for(var i=0;i<tabs.length;i++){if(tabs[i].textContent.trim().toLowerCase().indexOf(p)>=0)tabs[i].classList.add('active');}
   if(p==='bracket'){renderTeamStatus();renderBrkPnl();renderBrk();}
+  if(p==='league'){renderLeague();}
+  if(p==='summary'){renderSummary();}
 }
 
 function renderTeamStatus(){
@@ -823,6 +968,10 @@ document.addEventListener('click',function(e){
   if(gw){markResult(parseInt(gw.getAttribute('data-gw')),'W');return;}
   var gl=e.target.closest('[data-gl]');
   if(gl){markResult(parseInt(gl.getAttribute('data-gl')),'L');return;}
+  var undo=e.target.closest('[data-undo]');
+  if(undo){undoResult(parseInt(undo.getAttribute('data-undo')));return;}
+  var lbt=e.target.closest('[data-lbtoggle]');
+  if(lbt){var d=document.getElementById('lb-detail-'+lbt.getAttribute('data-lbtoggle'));if(d)d.classList.toggle('open');return;}
   var el=e.target.closest('[data-adv]');
   if(el){var p=el.getAttribute('data-adv').split('|');advanceTeam(decEsc(p[0]),p[1],parseInt(p[2]),[decEsc(p[3]),parseInt(p[4])]);return;}
   var el2=e.target.closest('[data-ff]');
